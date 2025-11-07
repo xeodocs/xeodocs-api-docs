@@ -1,0 +1,38 @@
+---
+title: XeoDocs API Documentation
+description: Comprehensive documentation for the XeoDocs backend, a Golang-based monorepo system for AI-driven translations of open-source technology documentation on xeodocs.com.
+template: splash
+hero:
+  tagline: AI-Powered Translation Platform for Open-Source Documentation
+  image:
+    file: ../../assets/houston.webp
+  actions:
+    - text: System Design
+      link: /design/
+      icon: right-arrow
+    - text: Read the Starlight docs
+      link: https://starlight.astro.build
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Overview
+
+XeoDocs is a backend system designed for AI-driven translations of open-source technology documentation, typically from English to other languages. Built as a Golang monorepo with microservices, it integrates tools like PostgreSQL, MinIO, and AI APIs to manage, translate, and build multilingual documentation sites.
+
+<CardGrid stagger>
+	<Card title="Backend Architecture" icon="rocket">
+		Learn about the microservices design, technology stack, and workflows in XeoDocs.
+	</Card>
+	<Card title="API Endpoints" icon="document">
+		Detailed reference for interacting with Auth, Project, Translation, and Build services.
+	</Card>
+	<Card title="Getting Started" icon="add-document">
+		Set up your development environment and understand the project structure.
+	</Card>
+	<Card title="Deployment Guide" icon="setting">
+		Configure Docker, Kubernetes, and CI/CD for XeoDocs deployment.
+	</Card>
+</CardGrid>

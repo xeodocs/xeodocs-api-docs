@@ -1,0 +1,17 @@
+FROM node:20-alpine
+
+RUN npm install -g pnpm
+
+RUN mkdir /temp && cd /temp && pnpm create astro my-starlight --template starlight --yes
+
+WORKDIR /app
+
+RUN cp -r /temp/my-starlight/* /app/ && rm -rf /temp
+
+COPY astro.config.mjs .
+
+RUN pnpm install
+
+EXPOSE 4321
+
+CMD ["pnpm", "dev", "--host", "0.0.0.0"]

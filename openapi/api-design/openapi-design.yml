@@ -1,0 +1,848 @@
+openapi: 3.0.0
+info:
+  title: XeoDocs API
+  description: API for managing translations of open-source technology documentation using AI at xeodocs.com.
+  version: 1.0.0
+servers:
+  - url: https://api.xeodocs.com
+    description: Production server
+  - url: http://localhost:8080
+    description: Development server
+paths:
+  /v1/auth/register:
+    post:
+      summary: Register a new user (admin only)
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid input
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+      security:
+        - bearerAuth: []
+  /v1/auth/login:
+    post:
+      summary: Login and obtain JWT token
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Invalid credentials
+        '500':
+          description: Internal server error
+      security: []
+  /v1/projects:
+    post:
+      summary: Create a new project
+      tags:
+        - Projects
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProjectRequest'
+      responses:
+        '201':
+          description: Project created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          description: Invalid input
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+      security:
+        - bearerAuth: []
+    get:
+      summary: List projects
+      tags:
+        - Projects
+      parameters:
+        - name: ownerId
+          in: query
+          schema:
+            type: integer
+          description: Filter by owner user ID
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: Page number for pagination
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+          description: Number of items per page
+      responses:
+        '200':
+          description: List of projects
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  projects:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Project'
+                  total:
+                    type: integer
+                  page:
+                    type: integer
+                  limit:
+                    type: integer
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+      security:
+        - bearerAuth: []
+  /v1/projects/{id}:
+    get:
+      summary: Get project details
+      tags:
+        - Projects
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Project details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Project not found
+        '500':
+          description: Internal server error
+      security:
+        - bearerAuth: []
+    put:
+      summary: Update project
+      tags:
+        - Projects
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProjectRequest'
+      responses:
+        '200':
+          description: Project updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          description: Invalid input
+        '401':
+          description: Unauthorized
+        '404':
+          description: Project not found
+        '500':
+          description: Internal server error
+      security:
+        - bearerAuth: []
+    delete:
+      summary: Delete project
+      tags:
+        - Projects
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Project deleted successfully
+        '401':
+          description: Unauthorized
+        '404':
+          description: Project not found
+        '500':
+          description: Internal server error
+      security:
+        - bearerAuth: []
+  /v1/projects/{id}/translate:
+    post:
+      summary: Trigger translation for the project
+      tags:
+        - Translations
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: lang
+          in: query
+          schema:
+            type: string
+          description: Specific language code to translate (e.g., 'es'); omit for all languages
+      responses:
+        '202':
+          description: Translation triggered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Translation process started
+        '401':
+          description: Unauthorized
+        '404':
+          description: Project not found
+        '500':
+          description: Internal server error
+      security:
+        - bearerAuth: []
+  /v1/projects/{id}/status:
+    get:
+      summary: Get translation and build status for the project
+      tags:
+        - Translations
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: lang
+          in: query
+          schema:
+            type: string
+          description: Specific language code; omit for overall status
+      responses:
+        '200':
+          description: Status details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: completed
+                  lastUpdated:
+                    type: string
+                    format: date-time
+                  details:
+                    type: object
+                    additionalProperties:
+                      type: string
+        '401':
+          description: Unauthorized
+        '404':
+          description: Project not found
+        '500':
+          description: Internal server error
+      security:
+        - bearerAuth: []
+  /v1/projects/{id}/build:
+    post:
+      summary: Trigger build and static generation for the project
+      tags:
+        - Builds
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: lang
+          in: query
+          schema:
+            type: string
+          description: Specific language code to build; omit for all languages
+      responses:
+        '202':
+          description: Build triggered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Build process started
+        '401':
+          description: Unauthorized
+        '404':
+          description: Project not found
+        '500':
+          description: Internal server error
+      security:
+        - bearerAuth: []
+  /v1/projects/{id}/static/{lang}:
+    get:
+      summary: Get URL or info for static files of a language
+      tags:
+        - Builds
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: lang
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Language code (e.g., 'es')
+      responses:
+        '200':
+          description: Static file info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    example: https://storage.xeodocs.com/projects/1/es/index.html
+                  lastBuilt:
+                    type: string
+                    format: date-time
+        '401':
+          description: Unauthorized
+        '404':
+          description: Project or language not found
+        '500':
+          description: Internal server error
+      security:
+        - bearerAuth: []
+  /v1/logs:
+    get:
+      summary: Query logs
+      tags:
+        - Logs
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+          description: Filter by log type (e.g., 'event', 'user', 'system', 'cron')
+        - name: userId
+          in: query
+          schema:
+            type: integer
+          description: Filter by user ID
+        - name: projectId
+          in: query
+          schema:
+            type: integer
+          description: Filter by project ID
+        - name: level
+          in: query
+          schema:
+            type: string
+          description: Filter by log level (e.g., 'info', 'warn', 'error')
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: Page number for pagination
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+          description: Number of items per page
+      responses:
+        '200':
+          description: List of logs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  logs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Log'
+                  total:
+                    type: integer
+                  page:
+                    type: integer
+                  limit:
+                    type: integer
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+      security:
+        - bearerAuth: []
+  /v1/roles:
+    post:
+      operationId: createRole
+      summary: Create a new role (admin only)
+      tags: [RBAC]
+      security: [{bearerAuth: []}]
+      requestBody:
+        $ref: '#/components/requestBodies/CreateRoleRequest'
+      responses:
+        '201': { $ref: '#/components/responses/Role' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    get:
+      operationId: listRoles
+      summary: List roles (paginated)
+      tags: [RBAC]
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Paginated role list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRoles'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/roles/{id}:
+    get:
+      operationId: getRole
+      summary: Get a role by ID
+      tags: [RBAC]
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: '#/components/parameters/RoleId'
+      responses:
+        '200': { $ref: '#/components/responses/Role' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      operationId: updateRole
+      summary: Update role name (admin only)
+      tags: [RBAC]
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: '#/components/parameters/RoleId'
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateRoleRequest'
+      responses:
+        '200': { $ref: '#/components/responses/Role' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      operationId: deleteRole
+      summary: Delete a role (admin only)
+      tags: [RBAC]
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: '#/components/parameters/RoleId'
+      responses:
+        '204': { description: No content }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/users:
+    post:
+      operationId: createUser
+      summary: Create a new user (admin only)
+      tags: [RBAC]
+      security: [{bearerAuth: []}]
+      requestBody:
+        $ref: '#/components/requestBodies/CreateUserRequest'
+      responses:
+        '201': { $ref: '#/components/responses/User' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    get:
+      operationId: listUsers
+      summary: List users (admin only)
+      tags: [RBAC]
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Paginated user list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUsers'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/users/{id}:
+    get:
+      operationId: getUser
+      summary: Get user details (admin or self)
+      tags: [RBAC]
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200': { $ref: '#/components/responses/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      operationId: updateUser
+      summary: Update user (admin or self)
+      tags: [RBAC]
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateUserRequest'
+      responses:
+        '200': { $ref: '#/components/responses/User' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      operationId: deleteUser
+      summary: Delete user (admin only)
+      tags: [RBAC]
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '204': { description: No content }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/users/{id}/password:
+    patch:
+      operationId: changePassword
+      summary: Change user password (admin or self)
+      tags: [RBAC]
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        $ref: '#/components/requestBodies/ChangePasswordRequest'
+      responses:
+        '204': { description: Password updated }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    RoleId:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer }
+    UserId:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer }
+    Page:
+      name: page
+      in: query
+      schema: { type: integer, default: 1 }
+    Limit:
+      name: limit
+      in: query
+      schema: { type: integer, default: 10 }
+  requestBodies:
+    CreateRoleRequest:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/CreateRoleRequest' }
+    UpdateRoleRequest:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/UpdateRoleRequest' }
+    CreateUserRequest:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/CreateUserRequest' }
+    UpdateUserRequest:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/UpdateUserRequest' }
+    ChangePasswordRequest:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ChangePasswordRequest' }
+  responses:
+    Role:
+      description: Role object
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Role' }
+    User:
+      description: User object
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/User' }
+    BadRequest:
+      description: Bad request
+    Unauthorized:
+      description: Unauthorized
+    NotFound:
+      description: Not found
+  schemas:
+    RegisterRequest:
+      type: object
+      required:
+        - username
+        - email
+        - password
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+        roleId:
+          type: integer
+          description: Optional role ID (admin only)
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+    User:
+      type: object
+      properties:
+        userId:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+        role:
+          $ref: '#/components/schemas/Role'
+        createdAt:
+          type: string
+          format: date-time
+    Role:
+      type: object
+      properties:
+        roleId:
+          type: integer
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    CreateProjectRequest:
+      type: object
+      required:
+        - name
+        - docUrl
+        - repoUrl
+        - languages
+        - buildCommand
+        - previewCommand
+      properties:
+        name:
+          type: string
+        docUrl:
+          type: string
+        repoUrl:
+          type: string
+        languages:
+          type: array
+          items:
+            type: string
+        buildCommand:
+          type: string
+        exportCommand:
+          type: string
+        previewCommand:
+          type: string
+    UpdateProjectRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        docUrl:
+          type: string
+        repoUrl:
+          type: string
+        languages:
+          type: array
+          items:
+            type: string
+        buildCommand:
+          type: string
+        exportCommand:
+          type: string
+        previewCommand:
+          type: string
+    Project:
+      type: object
+      properties:
+        projectId:
+          type: integer
+        name:
+          type: string
+        docUrl:
+          type: string
+        repoUrl:
+          type: string
+        ownerId:
+          type: integer
+        languages:
+          type: array
+          items:
+            type: string
+        buildCommand:
+          type: string
+        exportCommand:
+          type: string
+        previewCommand:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    Log:
+      type: object
+      properties:
+        logId:
+          type: integer
+        type:
+          type: string
+        message:
+          type: string
+        userId:
+          type: integer
+        projectId:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+        level:
+          type: string
+    CreateRoleRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          example: editor
+    UpdateRoleRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: senior-editor
+    CreateUserRequest:
+      type: object
+      required: [username, email, password, roleId]
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        roleId:
+          type: integer
+    UpdateUserRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        roleId:
+          type: integer
+    ChangePasswordRequest:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword:
+          type: string
+        newPassword:
+          type: string
+          minLength: 8
+    PaginatedRoles:
+      type: object
+      properties:
+        roles: { type: array, items: { $ref: '#/components/schemas/Role' } }
+        total: { type: integer }
+        page: { type: integer }
+        limit: { type: integer }
+    PaginatedUsers:
+      type: object
+      properties:
+        users: { type: array, items: { $ref: '#/components/schemas/User' } }
+        total: { type: integer }
+        page: { type: integer }
+        limit: { type: integer }

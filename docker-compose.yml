@@ -1,0 +1,39 @@
+services:
+  starlight:
+    build:
+      dockerfile: Dockerfile.starlight
+    ports:
+      - "28080:4321"
+    volumes:
+      - ./docs:/app/src/content/docs
+    restart: unless-stopped
+  spec-server:
+    image: python:3-alpine
+    ports:
+      - "28081:8080"
+    volumes:
+      - ./openapi:/app
+    working_dir: /app
+    command: python server.py
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  swagger-ui:
+    image: swaggerapi/swagger-ui:v5.17.14
+    ports:
+      - "28082:8080"
+    environment:
+      - SWAGGER_JSON_URL=http://localhost:28081/${OPENAPI_FILE}
+    depends_on:
+      - spec-server
+    restart: unless-stopped
+
+  redoc:
+    image: redocly/redoc
+    ports:
+      - "28083:80"
+    environment:
+      - SPEC_URL=http://localhost:28081/${OPENAPI_FILE}
+    depends_on:
+      - spec-server
+    restart: unless-stopped
