@@ -12,7 +12,7 @@ servers:
   - url: http://dev-api.xeodocs.com
     description: Development server
 paths:
-  /v1/auth/register:
+  /v1/auth/register:    
     post:
       operationId: registerUser
       summary: Register a new user (admin only)
@@ -63,6 +63,154 @@ paths:
         '500':
           description: Internal server error
       security: []
+  /v1/roles:
+    post:
+      operationId: createRole
+      summary: Create a new role (admin only)
+      tags: [RBAC]
+      security: [{bearerAuth: []}]
+      requestBody:
+        $ref: '#/components/requestBodies/CreateRoleRequest'
+      responses:
+        '201': { $ref: '#/components/responses/Role' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    get:
+      operationId: listRoles
+      summary: List roles (paginated)
+      tags: [RBAC]
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Paginated role list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRoles'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /v1/roles/{id}:
+    get:
+      operationId: getRole
+      summary: Get a role by ID
+      tags: [RBAC]
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: '#/components/parameters/RoleId'
+      responses:
+        '200': { $ref: '#/components/responses/Role' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      operationId: updateRole
+      summary: Update role name (admin only)
+      tags: [RBAC]
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: '#/components/parameters/RoleId'
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateRoleRequest'
+      responses:
+        '200': { $ref: '#/components/responses/Role' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      operationId: deleteRole
+      summary: Delete a role (admin only)
+      tags: [RBAC]
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: '#/components/parameters/RoleId'
+      responses:
+        '204': { description: No content }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/users:
+    post:
+      operationId: createUser
+      summary: Create a new user (admin only)
+      tags: [Users]
+      security: [{bearerAuth: []}]
+      requestBody:
+        $ref: '#/components/requestBodies/CreateUserRequest'
+      responses:
+        '201': { $ref: '#/components/responses/User' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    get:
+      operationId: listUsers
+      summary: List users (admin only)
+      tags: [Users]
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Paginated user list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUsers'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/users/{id}:
+    get:
+      operationId: getUser
+      summary: Get user details (admin or self)
+      tags: [Users]
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200': { $ref: '#/components/responses/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      operationId: updateUser
+      summary: Update user (admin or self)
+      tags: [Users]
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateUserRequest'
+      responses:
+        '200': { $ref: '#/components/responses/User' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      operationId: deleteUser
+      summary: Delete user (admin only)
+      tags: [Users]
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '204': { description: No content }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/users/{id}/password:
+    patch:
+      operationId: changePassword
+      summary: Change user password (admin or self)
+      tags: [Users]
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        $ref: '#/components/requestBodies/ChangePasswordRequest'
+      responses:
+        '204': { description: Password updated }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
   /v1/projects:
     post:
       operationId: createProject
@@ -438,155 +586,7 @@ paths:
           description: Internal server error
       security:
         - bearerAuth: []
-  /v1/roles:
-    post:
-      operationId: createRole
-      summary: Create a new role (admin only)
-      tags: [RBAC]
-      security: [{bearerAuth: []}]
-      requestBody:
-        $ref: '#/components/requestBodies/CreateRoleRequest'
-      responses:
-        '201': { $ref: '#/components/responses/Role' }
-        '400': { $ref: '#/components/responses/BadRequest' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-    get:
-      operationId: listRoles
-      summary: List roles (paginated)
-      tags: [RBAC]
-      security: [{bearerAuth: []}]
-      parameters:
-        - $ref: '#/components/parameters/Page'
-        - $ref: '#/components/parameters/Limit'
-      responses:
-        '200':
-          description: Paginated role list
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedRoles'
-        '401': { $ref: '#/components/responses/Unauthorized' }
 
-  /v1/roles/{id}:
-    get:
-      operationId: getRole
-      summary: Get a role by ID
-      tags: [RBAC]
-      security: [{bearerAuth: []}]
-      parameters:
-        - $ref: '#/components/parameters/RoleId'
-      responses:
-        '200': { $ref: '#/components/responses/Role' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { $ref: '#/components/responses/NotFound' }
-    put:
-      operationId: updateRole
-      summary: Update role name (admin only)
-      tags: [RBAC]
-      security: [{bearerAuth: []}]
-      parameters:
-        - $ref: '#/components/parameters/RoleId'
-      requestBody:
-        $ref: '#/components/requestBodies/UpdateRoleRequest'
-      responses:
-        '200': { $ref: '#/components/responses/Role' }
-        '400': { $ref: '#/components/responses/BadRequest' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { $ref: '#/components/responses/NotFound' }
-    delete:
-      operationId: deleteRole
-      summary: Delete a role (admin only)
-      tags: [RBAC]
-      security: [{bearerAuth: []}]
-      parameters:
-        - $ref: '#/components/parameters/RoleId'
-      responses:
-        '204': { description: No content }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { $ref: '#/components/responses/NotFound' }
-
-  /v1/users:
-    post:
-      operationId: createUser
-      summary: Create a new user (admin only)
-      tags: [RBAC]
-      security: [{bearerAuth: []}]
-      requestBody:
-        $ref: '#/components/requestBodies/CreateUserRequest'
-      responses:
-        '201': { $ref: '#/components/responses/User' }
-        '400': { $ref: '#/components/responses/BadRequest' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-    get:
-      operationId: listUsers
-      summary: List users (admin only)
-      tags: [RBAC]
-      security: [{bearerAuth: []}]
-      parameters:
-        - $ref: '#/components/parameters/Page'
-        - $ref: '#/components/parameters/Limit'
-      responses:
-        '200':
-          description: Paginated user list
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedUsers'
-        '401': { $ref: '#/components/responses/Unauthorized' }
-
-  /v1/users/{id}:
-    get:
-      operationId: getUser
-      summary: Get user details (admin or self)
-      tags: [RBAC]
-      security: [{bearerAuth: []}]
-      parameters:
-        - $ref: '#/components/parameters/UserId'
-      responses:
-        '200': { $ref: '#/components/responses/User' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { $ref: '#/components/responses/NotFound' }
-    put:
-      operationId: updateUser
-      summary: Update user (admin or self)
-      tags: [RBAC]
-      security: [{bearerAuth: []}]
-      parameters:
-        - $ref: '#/components/parameters/UserId'
-      requestBody:
-        $ref: '#/components/requestBodies/UpdateUserRequest'
-      responses:
-        '200': { $ref: '#/components/responses/User' }
-        '400': { $ref: '#/components/responses/BadRequest' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { $ref: '#/components/responses/NotFound' }
-    delete:
-      operationId: deleteUser
-      summary: Delete user (admin only)
-      tags: [RBAC]
-      security: [{bearerAuth: []}]
-      parameters:
-        - $ref: '#/components/parameters/UserId'
-      responses:
-        '204': { description: No content }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { $ref: '#/components/responses/NotFound' }
-
-  /v1/users/{id}/password:
-    patch:
-      operationId: changePassword
-      summary: Change user password (admin or self)
-      tags: [RBAC]
-      security: [{bearerAuth: []}]
-      parameters:
-        - $ref: '#/components/parameters/UserId'
-      requestBody:
-        $ref: '#/components/requestBodies/ChangePasswordRequest'
-      responses:
-        '204': { description: Password updated }
-        '400': { $ref: '#/components/responses/BadRequest' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { $ref: '#/components/responses/NotFound' }
 components:
   securitySchemes:
     bearerAuth:
