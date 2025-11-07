@@ -3,14 +3,18 @@ info:
   title: XeoDocs API
   description: API for managing translations of open-source technology documentation using AI at xeodocs.com.
   version: 1.0.0
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
 servers:
   - url: https://api.xeodocs.com
     description: Production server
-  - url: http://localhost:8080
+  - url: http://dev-api.xeodocs.com
     description: Development server
 paths:
   /v1/auth/register:
     post:
+      operationId: registerUser
       summary: Register a new user (admin only)
       tags:
         - Authentication
@@ -37,6 +41,7 @@ paths:
         - bearerAuth: []
   /v1/auth/login:
     post:
+      operationId: login
       summary: Login and obtain JWT token
       tags:
         - Authentication
@@ -60,6 +65,7 @@ paths:
       security: []
   /v1/projects:
     post:
+      operationId: createProject
       summary: Create a new project
       tags:
         - Projects
@@ -85,6 +91,7 @@ paths:
       security:
         - bearerAuth: []
     get:
+      operationId: listProjects
       summary: List projects
       tags:
         - Projects
@@ -132,6 +139,7 @@ paths:
         - bearerAuth: []
   /v1/projects/{id}:
     get:
+      operationId: getProject
       summary: Get project details
       tags:
         - Projects
@@ -157,6 +165,7 @@ paths:
       security:
         - bearerAuth: []
     put:
+      operationId: updateProject
       summary: Update project
       tags:
         - Projects
@@ -190,6 +199,7 @@ paths:
       security:
         - bearerAuth: []
     delete:
+      operationId: deleteProject
       summary: Delete project
       tags:
         - Projects
@@ -212,6 +222,7 @@ paths:
         - bearerAuth: []
   /v1/projects/{id}/translate:
     post:
+      operationId: triggerTranslation
       summary: Trigger translation for the project
       tags:
         - Translations
@@ -247,6 +258,7 @@ paths:
         - bearerAuth: []
   /v1/projects/{id}/status:
     get:
+      operationId: getProjectStatus
       summary: Get translation and build status for the project
       tags:
         - Translations
@@ -289,6 +301,7 @@ paths:
         - bearerAuth: []
   /v1/projects/{id}/build:
     post:
+      operationId: triggerBuild
       summary: Trigger build and static generation for the project
       tags:
         - Builds
@@ -324,6 +337,7 @@ paths:
         - bearerAuth: []
   /v1/projects/{id}/static/{lang}:
     get:
+      operationId: getStaticFiles
       summary: Get URL or info for static files of a language
       tags:
         - Builds
@@ -363,6 +377,7 @@ paths:
         - bearerAuth: []
   /v1/logs:
     get:
+      operationId: queryLogs
       summary: Query logs
       tags:
         - Logs
