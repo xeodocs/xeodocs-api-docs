@@ -47,5 +47,5 @@ Configure the Starlight docs in `starlight.config.ts`.
 
 ### OpenAPI Design
 
-Edit the OpenAPI design files in `openapi/` and refresh the browser to see changes.
+Edit the OpenAPI design file in `openapi/api-design/openapi-design.yaml` and refresh the browser to see changes.
 
