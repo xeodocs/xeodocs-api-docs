@@ -20,7 +20,7 @@ This design abstracts the complexity of the underlying microservices, allowing c
 
 1. **Request Handling**: Clients send HTTP requests to the gateway (e.g., POST `/v1/projects` to add a documentation repo for translation).
 2. **Authentication Check**: Middleware verifies JWTs (issued by the Auth Service) and injects user claims (e.g., userId, role) into downstream requests.
-3. **Routing**: Uses path-based routing (e.g., `/v1/auth/*` proxies to Auth Service at `http://auth-service:8081`).
+3. **Routing**: Uses path-based routing (e.g., `/v1/auth/*` proxies to Auth Service at `http://auth-service`).
 4. **Proxying**: Forwards the request using Go's `httputil.ReverseProxy` or custom handlers, relaying responses back to the client.
 5. **Error Management**: Provides unified error responses (e.g., JSON with status codes like 401 Unauthorized).
 
