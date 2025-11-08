@@ -37,7 +37,6 @@ This decouples request from execution, enhancing responsiveness.
 Translation Service handles AI-driven translation triggers and status monitoring. Below is a list of its endpoints with short descriptions:
 
 ### Translation Endpoints
-- **POST /v1/projects/\{id\}/translate**: Trigger AI translation for a project's tracked files, optionally for a specific language.
 - **GET /v1/projects/\{id\}/status**: Retrieve the status of ongoing or completed AI translations (and related builds) for a project, with details per language.
 
 These endpoints support XeoDocs' workflows for accurate, AI-based translations, with all requests protected by JWT via the API Gateway.
