@@ -26,10 +26,10 @@ docker compose up --build -d
 ```
 
 Available URLs:
-- **Starlight Docs (explained docs)**: `http://localhost:28080`
-- **Swagger UI (interactive)**: `http://localhost:28082`
-- **Redoc (clean, responsive)**: `http://localhost:28083`
-- **Raw YAML file**: `http://localhost:28081/openapi/${OPENAPI_FILE}`
+- **Starlight Docs (explained docs)**: `http://localhost:12000`
+- **Swagger UI (interactive)**: `http://localhost:12002`
+- **Redoc (clean, responsive)**: `http://localhost:12003`
+- **Raw YAML file**: `http://localhost:12001/openapi/${OPENAPI_FILE}`
 
 To stop the containers:
 

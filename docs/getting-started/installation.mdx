@@ -53,7 +53,7 @@ Use `docker-compose.dev.yml` for a local environment with volume mounts for hot-
    docker compose -f docker-compose.dev.yml up --build -d
    ```
    This starts:
-   - API Gateway (port 8080)
+   - API Gateway (port 12020)
    - Auth Service (internal port 8081)
    - Project Service (8082)
    - Repository Service (8083)
@@ -69,12 +69,12 @@ Use `docker-compose.dev.yml` for a local environment with volume mounts for hot-
    Automatically run by microservices on first startup using [Goose](https://github.com/pressly/goose).
 
 3. **Access the API**:
-   - Gateway: `http://localhost:8080/v1`
+   - Gateway: `http://localhost:12020/v1`
    - Repositories are stored locally with mounted volumes (e.g., `./repos:/repos` for processing).
    - Test login: POST to `/v1/auth/login` with default credentials (seed an admin user if needed).
 
 4. **Frontend Integration**:
-   For the Next.js admin panel, refer to the separate frontend repo setup. Point it to `http://localhost:8080/v1`.
+   For the Next.js admin panel, refer to the separate frontend repo setup. Point it to `http://localhost:12020/v1`.
 
 ## Production Setup
 
