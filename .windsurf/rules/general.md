@@ -9,3 +9,5 @@ trigger: always_on
 - Never remove the .windsurf directory
 
 - Always use camelCase for field keys in requests and responses
+
+- This repository is only for design in markdown and OpenAPI formats, don't write code here

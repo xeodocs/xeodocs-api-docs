@@ -14,10 +14,7 @@ export default defineConfig({
 					items: [
 						{ label: 'What is XeoDocs?', slug: 'getting-started/what-is-xeodocs' },
 						{ label: 'Installation Guide', slug: 'getting-started/installation' },
-						{
-							label: 'Design',
-							slug: 'design',
-						},
+						{ label: 'General Design', slug: 'getting-started/design' },
 					],
 				},
 				{
@@ -26,6 +23,7 @@ export default defineConfig({
 						{ label: 'Gateway', slug: 'microservices/gateway' },
 						{ label: 'Auth', slug: 'microservices/auth' },
 						{ label: 'Project', slug: 'microservices/project' },
+						{ label: 'Repository', slug: 'microservices/repository' },
 						{ label: 'Translation', slug: 'microservices/translation' },
 						{ label: 'Build', slug: 'microservices/build' },
 						{ label: 'Logging', slug: 'microservices/logging' },

@@ -4,28 +4,28 @@ description: Overview of the Project microservice in XeoDocs' architecture, hand
 template: doc
 ---
 
-The Project Service is a foundational microservice in XeoDocs. Written in Golang, this service manages the creation, updating, and deletion of projects, including cloning Git repositories, detecting translatable content, and preparing language-specific copies for translation.
+The Project Service is a foundational microservice in XeoDocs. Written in Golang, this service manages the creation, updating, and deletion of projects, including coordinating repository setup, detecting translatable content, and preparing language-specific copies for translation.
 
 ## Role in XeoDocs
 
 In XeoDocs' microservices framework, the Project Service serves as the entry point for onboarding new documentation projects:
 
 - **Project Management**: Provides CRUD operations for projects, storing details like repo URLs, languages, and build commands.
-- **Repository Handling**: Clones or forks public Git repos, identifies files for translation (e.g., Markdown, HTML), and creates per-language copies.
-- **Integration**: Collaborates with the Translation and Build Services to enable AI translations and static generation, ensuring seamless workflows.
+- **Repository Coordination**: Coordinates with Repository Service for cloning Git repos and creating language-specific copies, identifies files for translation.
+- **Integration**: Collaborates with the Repository, Translation, and Build Services to enable AI translations and static generation, ensuring seamless workflows.
 
 This service lays the groundwork for keeping translations synchronized with original English content.
 
 ## How It Works
 
 1. **Create Project**: Via `/v1/projects` POST, users add a project with details like doc URL, repo URL, languages (e.g., 'es', 'fr'), and commands.
-2. **Clone and Detect**: Uses go-git to clone the repo to a local directory (e.g., `/repos/{id}/original`), then scans for translatable files using filepath.Walk.
-3. **Language Copies**: Duplicates the repo for each language (e.g., `/repos/{id}/es`), logging paths to the tracked_files table in PostgreSQL.
+2. **Repository Setup**: Invokes Repository Service to clone the repo and create language copies, then scans for translatable files using filepath.Walk.
+3. **Language Copies**: Coordinates with Repository Service for creating language-specific copies, logging paths to the tracked_files table in PostgreSQL.
 4. **Update and Delete**: Handles modifications (e.g., adding languages) and cleanup, ensuring data consistency across services.
 
 ## Key Features
 
-- **Git Integration**: Leverages `go-git` for cloning, pulling, and change detection to keep content up-to-date.
+- **Repository Integration**: Coordinates with Repository Service for Git operations, leveraging change detection to keep content up-to-date.
 - **File Tracking**: Automatically detects and logs translatable files, with hashes for efficient update detection.
 - **Scalable Storage**: Uses MinIO or local filesystem for repo copies, supporting large documentation sets.
 - **CRUD Endpoints**: Fully RESTful with pagination and filtering for listing projects.
@@ -49,4 +49,4 @@ These endpoints support XeoDocs' workflows for onboarding open-source docs for A
 
 The Project Service enables efficient management of open-source docs, paving the way for AI translations and static deployments in XeoDocs.
 
-For connected services, visit [Auth Service](/microservices/auth) or [Translation Service](/microservices/translation). Get started with the [Installation Guide](/getting-started/installation).
+For connected services, visit [Repository Service](/microservices/repository) or [Auth Service](/microservices/auth). Get started with the [Installation Guide](/getting-started/installation).

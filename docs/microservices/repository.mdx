@@ -1,0 +1,54 @@
+---
+title: Repository Service
+description: Overview of the Repository microservice in XeoDocs' architecture, handling Git operations and file management for documentation projects.
+template: doc
+---
+
+The Repository Service is a core microservice in XeoDocs. Developed in Golang, this service manages Git operations and file handling for projects, including cloning repositories, creating language-specific copies, and other file management tasks excluding build phases.
+
+## Role in XeoDocs
+
+In XeoDocs' microservices architecture, the Repository Service centralizes Git and file operations:
+
+- **Repository Cloning**: Handles cloning of source Git repositories to local storage for processing.
+- **Language Copy Generation**: Creates per-language duplicates of repositories to prepare for translation workflows.
+- **File Management**: Manages file tracking, synchronization, and cleanup operations for documentation projects.
+- **Integration**: Provides APIs that other services (e.g., Project Service for initial setup, Scheduler Service for periodic updates) can invoke to perform Git and file tasks.
+
+This service moves repository and file handling responsibilities from the Project Service, enabling better separation of concerns and reusability across the platform.
+
+## How It Works
+
+1. **Clone Operation**: Receives clone requests via API, uses go-git to clone repositories to designated directories (e.g., `/repos/{projectId}/original`).
+2. **Language Copies Creation**: For each specified language, duplicates the repository structure and files, preparing them for translation processes.
+3. **Synchronization**: Handles git pull operations and file change detection using hashes for efficient updates.
+4. **File Tracking**: Maintains metadata about tracked files, including paths, hashes, and modification times in the database.
+5. **Cleanup**: Manages deletion of repositories and copies when projects are removed.
+
+## Key Features
+
+- **Git Integration**: Leverages `go-git` for all Git operations, supporting cloning, pulling, and change detection.
+- **File Tracking**: Automatically detects and tracks translatable files with hash-based change detection.
+- **RESTful API**: Exposes endpoints for programmatic access by other microservices.
+- **Asynchronous Processing**: Supports background processing for large repository operations.
+- **Error Handling**: Implements retries and logging for failed Git operations.
+
+## Repository Service Endpoints
+
+Repository Service provides APIs for Git and file operations that can be invoked by other services like the Scheduling Service. Below is a list of its endpoints:
+
+### Repository Management Endpoints
+- **POST /v1/repositories/clone**: Clone a Git repository, specifying the repository URL and project ID.
+- **POST /v1/repositories/\{projectId\}/language-copies**: Create language-specific copies of the repository for translation.
+- **PUT /v1/repositories/\{projectId\}/sync**: Synchronize the repository with upstream changes (git pull).
+- **DELETE /v1/repositories/\{projectId\}**: Remove the repository and all its language copies.
+
+These endpoints are internal-facing and secured via service-to-service authentication.
+
+## Deployment
+
+- **Docker**: Built via `Dockerfile.repository`; exposes port 8083 in `docker-compose.dev.yml`.
+
+The Repository Service streamlines Git and file operations in XeoDocs, supporting automated workflows for documentation translation and synchronization.
+
+For related microservices, see [Project Service](/microservices/project) or [Scheduler Service](/microservices/scheduler). Begin with the [Installation Guide](/getting-started/installation).
