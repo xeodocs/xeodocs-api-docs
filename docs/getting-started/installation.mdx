@@ -40,7 +40,7 @@ RABBITMQ_PORT=5672
 
 AI_API_KEY=your_xai_or_openai_key  # For Translation Service
 
-AUTH_SERVICE_URL=http://auth-service:8081
+AUTH_SERVICE_URL=http://auth-service
 # Add URLs for other services...
 ```
 
@@ -54,16 +54,16 @@ Use `docker-compose.dev.yml` for a local environment with volume mounts for hot-
    ```
    This starts:
    - API Gateway (port 12020)
-   - Auth Service (internal port 8081)
-   - Project Service (8082)
-   - Repository Service (8083)
-   - Translation Service (8084)
-   - Build Service (8085)
-   - Logging Service (8086)
+   - Auth Service (internal)
+   - Project Service (internal)
+   - Repository Service (internal)
+   - Translation Service (internal)
+   - Build Service (internal)
+   - Logging Service (internal)
    - Scheduler Service (internal)
    - Worker Service (internal)
-   - PostgreSQL (port 5432)
-   - RabbitMQ (port 5672)
+   - PostgreSQL (internal)
+   - RabbitMQ (internal)
 
 2. **Database Migrations**:  
    Automatically run by microservices on first startup using [Goose](https://github.com/pressly/goose).
