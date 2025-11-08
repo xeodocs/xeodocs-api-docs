@@ -28,6 +28,7 @@ export default defineConfig({
 						{ label: 'Build', slug: 'microservices/build' },
 						{ label: 'Logging', slug: 'microservices/logging' },
 						{ label: 'Scheduler', slug: 'microservices/scheduler' },
+						{ label: 'Worker', slug: 'microservices/worker' },
 					],
 				},
 			],

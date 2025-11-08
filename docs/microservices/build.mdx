@@ -12,40 +12,41 @@ Within XeoDocs' microservices ecosystem, the Build Service focuses on transformi
 
 - **Static Generation**: Converts dynamic previews into static files (HTML, CSS, JS, images) for cost-effective hosting.
 - **Banner Injection**: Adds non-intrusive promotional banners to drive traffic to related projects.
-- **Integration**: Works post-translation, triggered after AI processing in the Translation Service, to finalize content for publication.
+- **Integration**: Works post-translation, triggered by Worker Service to finalize content and upload to target repositories.
 
-This service supports XeoDocs' goal of providing up-to-date, accessible translations by automating the build pipeline.
+This service supports XeoDocs' goal of providing up-to-date, accessible translations by automating the build and deployment pipeline.
 
 ## How It Works
 
-1. **Trigger Build**: Invoked via `/v1/projects/{id}/build` (optionally for a specific language), it changes to the language-specific repo directory.
-2. **Execute Commands**: Runs framework-specific commands (e.g., `npm run build && npm run start`) using `os/exec`.
-3. **Export or Scrape**: If an export command exists (e.g., `npm run export`), uses it; otherwise, starts a preview server and scrapes content with Colly.
-4. **Banner Injection**: Post-processes HTML files to insert subtle banners (e.g., footers promoting other projects).
-5. **Storage**: Uploads the static files to MinIO, generating accessible URLs via `/v1/projects/{id}/static/{lang}`.
+1. **Trigger Build**: Called internally by Worker Service for a project (optionally specific language), operates on mounted volume directories.
+2. **Execute Commands**: Runs framework-specific commands (e.g., `npm run build`) using `os/exec`.
+3. **Export or Scrape**: If export command exists, uses it; otherwise, starts preview server and scrapes with Colly.
+4. **Banner Injection**: Post-processes HTML to insert banners.
+5. **Deployment**: Pushes static files to target Git repository for hosting.
 
-This workflow ensures static content is ready for deployment on platforms like Vercel or Netlify.
+This ensures translated content is built and deployed automatically.
 
 ## Key Features
 
 - **Framework Agnostic**: Supports common doc frameworks (e.g., Next.js, Docusaurus) via configurable build/export commands.
 - **Fallback Scraping**: Uses `gocolly/colly` for dynamic sites without native static export.
-- **Efficient Storage**: Integrates with MinIO for scalable, S3-compatible file hosting.
+- **Git Deployment**: Pushes built static files to target repositories for hosting.
+- **Mounted Volumes**: Operates on shared mounted volumes for file access.
 - **Error Resilience**: Includes retries for command execution and logging to the Logging Service.
 
 ## Build Service Endpoints
 
-Build Service handles the triggering of builds, static content generation, and retrieval of static file information. Below is a list of its endpoints with short descriptions:
+Build Service provides private APIs for build and deployment operations, invoked by the Worker Service. Below is a list of its endpoints:
 
 ### Build Endpoints
-- **POST /v1/projects/\{id\}/build**: Trigger the build process and static generation for a project's translated content, optionally for a specific language.
-- **GET /v1/projects/\{id\}/static/\{lang\}**: Retrieve the URL or details for the generated static files of a specific language version of the project.
+- **POST /internal/build-task**: Execute the build process and static generation for a project's translated content, optionally for a specific language.
 
-These endpoints support XeoDocs' workflows for creating deployable static sites from AI-translated content, with all requests protected by JWT via the API Gateway.
+These endpoints are private and secured for service-to-service communication.
 
 ## Deployment
 
 - **Docker**: Uses `Dockerfile.build` with Node.js; exposes port 8084 in `docker-compose.dev.yml`.
+- **Volumes**: Mounts shared volume for accessing repository files.
 
 The Build Service completes the XeoDocs pipeline, turning AI-translated content into ready-to-deploy sites.
 

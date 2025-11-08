@@ -4,23 +4,24 @@ description: Overview of the XeoDocs backend architecture.
 template: doc
 ---
 
-This document provides an informative overview of the XeoDocs backend architecture. The backend is structured as a Golang-based monorepo with microservices, emphasizing modularity, scalability, and integration with tools like Docker, PostgreSQL, and MinIO. This list breaks down key aspects to help Windsurf parse and comprehend the system's structure, components, and workflows.
+This document provides an informative overview of the XeoDocs backend architecture. The backend is structured as a Golang-based monorepo with microservices, emphasizing modularity, scalability, and integration with tools like Docker, PostgreSQL, and RabbitMQ. This list breaks down key aspects to help Windsurf parse and comprehend the system's structure, components, and workflows.
 
 ## 1. Overall Architecture
 - **Monorepo Structure**: The backend is organized in a single repository (`xeodocs-backend/`) for ease of management, with shared modules and service-specific code.
-- **Microservices Design**: Decomposed into independent services (Auth, Project, Repository, Translation, Build, Logging, Scheduler) plus a custom API Gateway in Go.
+- **Microservices Design**: Decomposed into independent services (Auth, Project, Repository, Translation, Build, Logging, Scheduler, Worker) plus a custom API Gateway in Go.
 - **Technology Stack**:
   - Language: Golang (Go 1.21+).
   - Database: PostgreSQL.
-  - Storage: MinIO (S3-compatible) for repositories and static files.
-  - Scheduling: gocron for periodic tasks.
+  - Storage: Local file system with mounted volumes for repositories and processing; final output uploaded to target repositories.
+  - Message Queuing: RabbitMQ for asynchronous task handling.
+  - Scheduling: gocron for periodic tasks in Scheduler Service.
   - Git Operations: go-git for cloning, pulling, and managing repos.
   - AI Integration: xAI/OpenAI/Gemini APIs for translations.
   - Web Scraping: gocolly/colly (fallback for static generation).
   - Authentication: JWT with RBAC using golang-jwt.
   - Routing: native Go HTTP package.
   - Logging: Zerolog or Logrus, centralized in Logging Service.
-- **Deployment**: Docker containers; docker-compose for dev/prod; Kubernetes-ready for scaling.
+- **Deployment**: Docker containers; docker-compose.dev.yml includes RabbitMQ for message queuing; Kubernetes-ready for scaling.
 
 ## 2. Directory Structure
 - **Root Files**:
@@ -37,6 +38,7 @@ This document provides an informative overview of the XeoDocs backend architectu
   - `build/main.go`: Build Service.
   - `logging/main.go`: Logging Service.
   - `scheduler/main.go`: Scheduler with gocron jobs.
+  - `worker/main.go`: Worker Service consumer.
 - **internal/**: Core logic packages.
   - `shared/`: Common utils (config, db, logging, auth, storage).
   - `gateway/`: Proxy handlers, routes, middleware.
@@ -47,6 +49,7 @@ This document provides an informative overview of the XeoDocs backend architectu
   - `build/`: Build handlers, executor (npm), scraper.
   - `logging/`: Log query handlers, models.
   - `scheduler/`: Job definitions for periodic updates.
+  - `worker/`: Task processing handlers, queue consumers.
 - **tests/**: Integration/E2E tests.
 
 ## 3. Key Microservices and Responsibilities
@@ -58,41 +61,49 @@ This document provides an informative overview of the XeoDocs backend architectu
   - Manages users, roles, sessions via JWT.
 - **Project Service**:
   - CRUD for projects (add repo URL, languages, build commands).
+  - Enqueues tasks (e.g., clone_repo) to RabbitMQ upon API requests, returning 202 Accepted immediately.
 - **Repository Service**:
-  - Clones/forks repos, detects translatable files (.md, .html), creates language copies.
+  - Dedicated to Git interactions (cloning, pulling, forking, change detection via hashes).
+  - Called internally by Worker for Git ops, adhering to single responsibility.
 - **Translation Service**:
-  - Triggers AI translations for tracked files.
-  - Parallel processing with goroutines; updates file hashes.
+  - Enqueues translation tasks to RabbitMQ upon requests, returning 202 Accepted.
+  - Processes AI translations asynchronously via Worker.
 - **Build Service**:
   - Executes build/export commands (npm via os/exec).
   - Fallback scraping; injects non-intrusive banners.
-  - Stores static content in MinIO.
+  - Uploads static content to target repositories.
 - **Logging Service**:
   - Stores/queries logs (event, user, system, cron).
 - **Scheduler Service**:
   - Periodic git pulls, change detection, auto-translations/builds.
   - Logs to Logging Service; no public endpoints.
+- **Worker Service**:
+  - Consumes tasks from RabbitMQ queues (e.g., clone_repo, translate_files).
+  - Processes enqueued tasks using goroutines for concurrency.
+  - Makes internal calls to other services or enqueues follow-up tasks, chaining workflows (e.g., clone → translate → build).
+  - Scales horizontally in Kubernetes for AI-intensive loads; includes health checks and logging.
 
 ## 4. Workflows and Integration
 - **Adding a Project**:
-  - Clone original repo to /repos/{id}/original.
+  - Project Service enqueues "clone_repo" task to RabbitMQ, returns 202 Accepted.
+  - Worker consumes task, calls Repository Service to clone to /repos/{id}/original and create language copies.
   - Detect files, log to DB.
-  - Copy to language dirs (e.g., /repos/{id}/es).
 - **Translation Workflow**:
-  - Read file, chunk content, prompt AI (e.g., "Translate to {lang}, preserve markdown").
-  - Write back, update metadata.
+  - Translation Service enqueues "translate_files" task, returns 202 Accepted.
+  - Worker processes task: reads files, chunks content, prompts AI, writes back, updates metadata.
 - **Update Workflow**:
   - Scheduler pulls changes hourly.
   - Propagate to copies; re-translate if changed.
   - Trigger build if needed.
 - **Build Workflow**:
-  - Run commands in language dir.
-  - Export or scrape preview server.
-  - Inject banners (e.g., HTML footer).
-  - Upload to MinIO bucket.
+  - Build Service enqueues "build_task" or Worker chains it after translation.
+  - Worker processes: runs commands in language dir, exports or scrapes, injects banners.
+  - Uploads static content to target repository.
 - **Communication**:
-  - HTTP/GRPC between services; service discovery via env vars.
-  - Async via queues (optional, e.g., RabbitMQ).
+  - Public endpoints through API Gateway with JWT/RBAC.
+  - Private endpoints direct service-to-service HTTP/GRPC, secured with mTLS or API keys.
+  - Async task handling via RabbitMQ queues.
+  - No service mesh (Istio/Linkerd) at this stage.
 - **Security**:
   - JWT for auth; RBAC (admin/editor/viewer).
   - Error handling with retries, timeouts.

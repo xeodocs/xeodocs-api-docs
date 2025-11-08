@@ -4,7 +4,7 @@ description: Step-by-step instructions for setting up XeoDocs locally or in prod
 template: doc
 ---
 
-Welcome to the installation guide for XeoDocs, the innovative platform on xeodocs.com that uses AI to translate open-source technology documentation, typically from English into other languages. This guide covers setting up the backend microservices (built in Golang), database (PostgreSQL), storage (MinIO), and more using Docker for a seamless development or production environment.
+Welcome to the installation guide for XeoDocs, the innovative platform on xeodocs.com that uses AI to translate open-source technology documentation, typically from English into other languages. This guide covers setting up the backend microservices (built in Golang), database (PostgreSQL), message queue (RabbitMQ), and local file system storage using Docker for a seamless development or production environment with asynchronous task processing.
 
 ## Prerequisites
 
@@ -33,8 +33,10 @@ DB_USER=postgres
 DB_PASSWORD=your_secure_password
 DB_NAME=xeodocs
 
-MINIO_ROOT_USER=minioadmin
-MINIO_ROOT_PASSWORD=minioadmin
+RABBITMQ_DEFAULT_USER=guest
+RABBITMQ_DEFAULT_PASS=guest
+RABBITMQ_HOST=rabbitmq
+RABBITMQ_PORT=5672
 
 AI_API_KEY=your_xai_or_openai_key  # For Translation Service
 
@@ -54,19 +56,21 @@ Use `docker-compose.dev.yml` for a local environment with volume mounts for hot-
    - API Gateway (port 8080)
    - Auth Service (internal port 8081)
    - Project Service (8082)
-   - Translation Service (8083)
-   - Build Service (8084)
-   - Logging Service (8085)
+   - Repository Service (8083)
+   - Translation Service (8084)
+   - Build Service (8085)
+   - Logging Service (8086)
    - Scheduler Service (internal)
+   - Worker Service (internal)
    - PostgreSQL (port 5432)
-   - MinIO (port 9000)
+   - RabbitMQ (port 5672)
 
 2. **Database Migrations**:  
    Automatically run by microservices on first startup using [Goose](https://github.com/pressly/goose).
 
 3. **Access the API**:
    - Gateway: `http://localhost:8080/v1`
-   - MinIO Console: `http://localhost:9001` (login with MINIO_ROOT_USER/PASSWORD)
+   - Repositories are stored locally with mounted volumes (e.g., `./repos:/repos` for processing).
    - Test login: POST to `/v1/auth/login` with default credentials (seed an admin user if needed).
 
 4. **Frontend Integration**:

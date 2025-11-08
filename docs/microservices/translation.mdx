@@ -10,25 +10,26 @@ The Translation Service is a critical microservice in XeoDocs. Built in Golang, 
 
 In XeoDocs' microservices architecture, the Translation Service focuses on the core AI translation process:
 
-- **AI Translation Execution**: Processes translatable content from project repositories, leveraging APIs like xAI or OpenAI for high-quality results.
-- **Status Monitoring**: Provides real-time updates on translation progress for each language.
-- **Integration**: Works in tandem with the Project Service (for file access) and Build Service (for post-translation static generation), ensuring end-to-end automation.
+- **Task Enqueuing**: Receives translation requests, enqueues "translate_files" tasks to RabbitMQ, returns 202 Accepted immediately.
+- **Async Processing**: Tasks are processed asynchronously by the Worker Service using AI models.
+- **Integration**: Collaborates with Worker for file access and processing, ensuring end-to-end automation.
 
 This service enables XeoDocs to deliver up-to-date, AI-powered translations, bridging language gaps in the open-source community.
 
 ## How It Works
 
-1. **Trigger Translation**: Initiated via `/v1/projects/{id}/translate` (for all or specific languages), it reads tracked files from language-specific repo copies.
-2. **Content Chunking**: Breaks large files into manageable chunks (e.g., under 4k tokens) to optimize AI API calls.
-3. **AI Prompting**: Sends prompts like "Translate this technical documentation from English to \{lang\}, preserving markdown and code blocks" to the AI API.
-4. **Parallel Processing**: Uses goroutines and sync.WaitGroup to translate files concurrently across languages.
-5. **Update and Save**: Writes translated content back, updates metadata (e.g., last_translated_at, hash), and logs progress.
+1. **Trigger Translation**: Receives request via public endpoint, enqueues "translate_files" task to RabbitMQ, returns 202 Accepted.
+2. **Async Processing**: Worker Service consumes task, chunks content, prompts AI, writes back, updates metadata.
+3. **Status Monitoring**: Provides polling endpoint for progress.
+
+This decouples request from execution, enhancing responsiveness.
 
 ## Key Features
 
 - **AI Model Integration**: Supports xAI/OpenAI for contextual, accurate translations tailored to technical docs.
-- **Preservation of Structure**: Ensures code, markdown, and formatting remain intact during translation.
-- **Async Status Checks**: Endpoint `/v1/projects/{id}/status` for polling progress (e.g., "completed", "in progress").
+- **Task Enqueuing**: Enqueues translation tasks asynchronously via RabbitMQ for immediate response.
+- **Async Processing**: Worker handles chunking, prompting, and saving with goroutines.
+- **Status Monitoring**: Polling endpoint for tracking progress.
 - **Error Handling**: Retries failed API calls and logs issues to the Logging Service.
 
 ## Translation Service Endpoints

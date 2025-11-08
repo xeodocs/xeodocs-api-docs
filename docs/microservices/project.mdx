@@ -11,24 +11,25 @@ The Project Service is a foundational microservice in XeoDocs. Written in Golang
 In XeoDocs' microservices framework, the Project Service serves as the entry point for onboarding new documentation projects:
 
 - **Project Management**: Provides CRUD operations for projects, storing details like repo URLs, languages, and build commands.
-- **Repository Coordination**: Coordinates with Repository Service for cloning Git repos and creating language-specific copies, identifies files for translation.
-- **Integration**: Collaborates with the Repository, Translation, and Build Services to enable AI translations and static generation, ensuring seamless workflows.
+- **Task Enqueuing**: Upon project creation, enqueues "clone_repo" tasks to RabbitMQ, returns 202 Accepted immediately.
+- **Integration**: Collaborates with Worker Service for asynchronous repository setup and file detection.
 
 This service lays the groundwork for keeping translations synchronized with original English content.
 
 ## How It Works
 
-1. **Create Project**: Via `/v1/projects` POST, users add a project with details like doc URL, repo URL, languages (e.g., 'es', 'fr'), and commands.
-2. **Repository Setup**: Invokes Repository Service to clone the repo and create language copies, then scans for translatable files using filepath.Walk.
-3. **Language Copies**: Coordinates with Repository Service for creating language-specific copies, logging paths to the tracked_files table in PostgreSQL.
-4. **Update and Delete**: Handles modifications (e.g., adding languages) and cleanup, ensuring data consistency across services.
+1. **Create Project**: Via public `/v1/projects` POST, stores project details, enqueues "clone_repo" task to RabbitMQ, returns 202 Accepted.
+2. **Async Setup**: Worker Service processes task, calls Repository Service for cloning and file detection, creates language copies.
+3. **Update and Delete**: Handles modifications and cleanup synchronously.
+
+This ensures immediate response while processing occurs in the background.
 
 ## Key Features
 
-- **Repository Integration**: Coordinates with Repository Service for Git operations, leveraging change detection to keep content up-to-date.
-- **File Tracking**: Automatically detects and logs translatable files, with hashes for efficient update detection.
-- **Scalable Storage**: Uses MinIO or local filesystem for repo copies, supporting large documentation sets.
-- **CRUD Endpoints**: Fully RESTful with pagination and filtering for listing projects.
+- **Async Task Handling**: Enqueues setup tasks to RabbitMQ for immediate 202 responses.
+- **File Tracking**: Logs translatable files with hashes for update detection.
+- **Local Storage**: Integrates with mounted volumes for repository handling.
+- **CRUD Endpoints**: RESTful with pagination for project management.
 
 ## Project Service Endpoints
 

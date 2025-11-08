@@ -1,0 +1,50 @@
+---
+title: Worker Service
+description: Overview of the Worker microservice in XeoDocs' architecture, responsible for asynchronous task processing via message queues.
+template: doc
+---
+
+The Worker Service is a critical microservice in XeoDocs. Developed in Golang, this service acts as the primary consumer for RabbitMQ queues, processing enqueued tasks asynchronously to decouple long-running operations from synchronous API responses.
+
+## Role in XeoDocs
+
+Within XeoDocs' microservices ecosystem, the Worker Service focuses on background task execution:
+
+- **Asynchronous Task Processing**: Consumes tasks from RabbitMQ queues (e.g., "clone_repo", "translate_files", "build_task") enqueued by producer services like Project and Translation.
+- **Workflow Chaining**: Processes tasks and may enqueue follow-up tasks or make internal calls to other services, enabling complex workflows (e.g., clone → translate → build).
+- **Concurrency and Scalability**: Uses goroutines for parallel processing; scales horizontally in Kubernetes for AI-intensive or resource-heavy loads.
+- **Integration**: Works alongside Repository, Translation, and Build Services to handle file operations and computations without blocking API responses.
+
+This service enhances user experience by ensuring immediate API acknowledgments while processing occurs in the background.
+
+## How It Works
+
+1. **Queue Consumption**: Continuously listens to RabbitMQ queues for incoming tasks.
+2. **Task Execution**: Upon receiving a task, processes it using appropriate handlers (e.g., for cloning, calls Repository Service internally).
+3. **Concurrency**: Employs goroutines to handle multiple tasks simultaneously, optimizing for I/O-bound (Git ops) and CPU-bound (AI translations) operations.
+4. **Chaining and Callbacks**: After completing a task, may enqueue subsequent tasks (e.g., after cloning, enqueue translation) or invoke other services directly.
+5. **Error Handling and Logging**: Implements retries for failed operations, logs progress and errors to the Logging Service, and includes health checks for monitoring.
+
+This asynchronous model decouples request handling from execution, improving responsiveness.
+
+## Key Features
+
+- **Message Queue Integration**: Robust consumer for RabbitMQ, supporting task prioritization and dead-letter queues.
+- **Goroutine-Based Concurrency**: Efficient parallel processing for high-throughput task execution.
+- **Workflow Orchestration**: Ability to chain tasks and coordinate multi-step processes.
+- **Scalable Architecture**: Designed for horizontal scaling in Kubernetes, with health checks and metrics.
+- **Internal Communication**: Makes direct HTTP/GRPC calls to other services for private endpoints.
+- **Fault Tolerance**: Comprehensive error handling, retries, and logging to ensure reliability.
+
+## Worker Service Endpoints
+
+Worker Service does not expose public endpoints; it operates internally as a queue consumer. It communicates with other services via private endpoints or direct calls.
+
+## Deployment
+
+- **Docker**: Built via `Dockerfile.worker`; runs continuously in `docker-compose.dev.yml` alongside RabbitMQ.
+- **Scaling**: Multiple instances in Kubernetes for load balancing and high availability.
+
+The Worker Service powers XeoDocs' asynchronous capabilities, ensuring efficient background processing of complex tasks.
+
+For related microservices, see [Project Service](/microservices/project) or [Translation Service](/microservices/translation). Begin with the [Installation Guide](/getting-started/installation).
