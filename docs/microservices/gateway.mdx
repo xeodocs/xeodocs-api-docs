@@ -1,0 +1,43 @@
+---
+title: API Gateway
+description: Overview of the custom API Gateway in XeoDocs' microservices architecture, handling routing, authentication, and more for AI-driven documentation translations.
+template: doc
+---
+
+The API Gateway serves as the central entry point for all client interactions in XeoDocs API. Built in Golang, it orchestrates requests across the system's microservices, ensuring secure, efficient, and scalable operations.
+
+## Role in XeoDocs
+
+In XeoDocs' microservices architecture, the API Gateway acts as a unified facade:
+
+- **Routing and Proxying**: Directs incoming requests (e.g., from the Next.js admin panel) to the appropriate backend services, such as Auth, Project, Translation, Build, Logging, or Scheduler.
+- **Security Enforcement**: Validates JWT tokens for authentication and applies role-based access control (RBAC) before forwarding requests.
+- **Additional Middleware**: Implements rate limiting, CORS handling, and centralized logging to enhance reliability and observability.
+
+This design abstracts the complexity of the underlying microservices, allowing clients to interact with a single endpoint (e.g., `https://api.xeodocs.com/v1`) while the gateway manages distribution.
+
+## How It Works
+
+1. **Request Handling**: Clients send HTTP requests to the gateway (e.g., POST `/v1/projects` to add a documentation repo for translation).
+2. **Authentication Check**: Middleware verifies JWTs (issued by the Auth Service) and injects user claims (e.g., userId, role) into downstream requests.
+3. **Routing**: Uses path-based routing (e.g., `/v1/auth/*` proxies to Auth Service at `http://auth-service:8081`).
+4. **Proxying**: Forwards the request using Go's `httputil.ReverseProxy` or custom handlers, relaying responses back to the client.
+5. **Error Management**: Provides unified error responses (e.g., JSON with status codes like 401 Unauthorized).
+
+Environment variables configure service URLs (e.g., `AUTH_SERVICE_URL`), enabling flexible deployment in Docker or Kubernetes.
+
+## Key Features
+
+- **JWT-Based Auth**: Integrates with `golang-jwt` (or similar) for token validation; supports RBAC roles like admin, editor, and viewer.
+- **Rate Limiting**: Uses `golang.org/x/time/rate` (or similar) to prevent abuse during high-traffic scenarios, such as multiple AI translation triggers.
+- **Logging Integration**: Logs requests to the Logging Service for auditing system events, like project additions or build triggers.
+- **Scalability**: Stateless design allows horizontal scaling; load balancing for replicated services.
+- **CORS Support**: Enables secure cross-origin requests from the frontend.
+
+## Deployment
+
+- **Docker**: Built via `Dockerfile.gateway`; runs on port 8080 in `docker-compose.dev.yml`.
+
+This gateway ensures seamless integration for XeoDocs' core workflows.
+
+For more on other microservices, see [Auth Service](/microservices/auth) or [Translation Service](/microservices/translation). If you're setting up XeoDocs, start with the [Installation Guide](/getting-started/installation).

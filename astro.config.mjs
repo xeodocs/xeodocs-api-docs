@@ -7,24 +7,39 @@ export default defineConfig({
 	integrations: [
 		starlight({
 			title: 'XeoDocs Docs',
-			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/withastro/starlight' }],
+			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/xeodocs' }],
 			sidebar: [
 				{
-					label: 'Design',
-					slug: 'design',
+					label: 'Getting Started',
+					items: [
+						{ label: 'What is XeoDocs?', slug: 'getting-started/what-is-xeodocs' },
+						{ label: 'Installation Guide', slug: 'getting-started/installation' },
+						{
+							label: 'Design',
+							slug: 'design',
+						},
+					],
 				},
-				// {
-				// 	label: 'Guides',
-				// 	items: [
-				// 		// Each item here is one entry in the navigation menu.
-				// 		{ label: 'Example Guide', slug: 'guides/example' },
-				// 	],
-				// },
-				// {
-				// 	label: 'Reference',
-				// 	autogenerate: { directory: 'reference' },
-				// },
+				{
+					label: 'Microservices',
+					items: [
+						{ label: 'Gateway', slug: 'microservices/gateway' },
+						{ label: 'Auth', slug: 'microservices/auth' },
+						{ label: 'Project', slug: 'microservices/project' },
+						{ label: 'Translation', slug: 'microservices/translation' },
+						{ label: 'Build', slug: 'microservices/build' },
+						{ label: 'Logging', slug: 'microservices/logging' },
+						{ label: 'Scheduler', slug: 'microservices/scheduler' },
+					],
+				},
 			],
+			locales: {
+				root: {
+					label: 'English',
+					lang: 'en',
+				},
+			},
+			defaultLocale: 'root',
 		}),
 	],
 });

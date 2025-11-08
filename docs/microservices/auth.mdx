@@ -1,0 +1,67 @@
+---
+title: Auth Service
+description: Overview of the Auth microservice in XeoDocs' architecture, managing authentication, users, and roles for secure AI-powered translations of open-source documentation.
+template: doc
+---
+
+The Auth Service is a core component of XeoDocs. Built in Golang, this microservice handles user authentication, registration, and role-based access control (RBAC), ensuring secure access to features like project management, AI translations, and static content generation.
+
+## Role in XeoDocs
+
+In XeoDocs' microservices setup, the Auth Service acts as the guardian of user identities:
+
+- **Authentication**: Manages login sessions via JWT tokens, which are validated by the API Gateway for all protected endpoints.
+- **User and Role Management**: Provides CRUD operations for users and roles, enabling admins to control access levels (e.g., admin for creating projects, editor for triggering translations).
+- **Integration**: Supplies JWTs to the gateway, which enforces RBAC across services like Project, Translation, and Build.
+
+This separation ensures that sensitive operations, such as translating repo content or injecting banners, are only accessible to authorized users.
+
+## How It Works
+
+1. **Login Process**: Users send credentials to `/v1/auth/login`; the service validates them against hashed passwords in PostgreSQL and issues a JWT with claims (e.g., userId, role).
+2. **Registration**: Admins create new users via `/v1/auth/register` or `/v1/users` endpoints, assigning roles like `admin`, `editor`, or `viewer`.
+3. **RBAC Enforcement**: While the gateway handles middleware checks, the Auth Service is the source of truth for user data and roles.
+4. **Password Management**: Supports secure hashing (bcrypt) and changes via `/v1/users/{id}/password`.
+
+All endpoints are prefixed with `/v1` and documented in the OpenAPI spec.
+
+## Key Features
+
+- **JWT Authentication**: Uses `golang-jwt` for stateless tokens with expiration and custom claims. The JWT Validity Verification is handled exclusively at the API Gateway.
+- **RBAC Support**: Roles define permissions (e.g., admins manage users; editors handle translations). RBAC Authorization Verification is primarily performed at the API Gateway for coarse-grained checks, with potential fine-grained extensions in individual services if needed.
+- **User CRUD**: Endpoints for creating, listing, updating, and deleting users (`/v1/users/*`).
+- **Role CRUD**: Manage roles via `/v1/roles/*` for flexible access control.
+- **Security Best Practices**: Password hashing, input validation, and error handling to prevent common vulnerabilities.
+
+## Auth Service Endpoints
+
+Below is a list of its endpoints with short descriptions:
+
+### Authentication Endpoints
+- **POST /v1/auth/register**: Register a new user (admin-only), creating accounts with roles for secure access.
+- **POST /v1/auth/login**: Authenticate a user and issue a JWT token for session management (public).
+
+### User Management Endpoints
+- **POST /v1/users**: Create a new user (admin-only), assigning username, email, password, and role.
+- **GET /v1/users**: List all users (admin-only, paginated) for oversight.
+- **GET /v1/users/\{id\}**: Retrieve details of a specific user (admin or self).
+- **PUT /v1/users/\{id\}**: Update user details like username, email, or role (admin or self). Only admins can update roles.
+- **PATCH /v1/users/\{id\}/password**: Change the user's password (admin or self) securely.
+- **DELETE /v1/users/\{id\}**: Delete a user (admin-only).
+
+### Role Management Endpoints
+- **POST /v1/roles**: Create a new role (admin-only), such as 'editor' or 'viewer'.
+- **GET /v1/roles**: List all roles (paginated) for RBAC configuration (admin-only).
+- **GET /v1/roles/\{id\}**: Get details of a specific role (admin-only).
+- **PUT /v1/roles/\{id\}**: Update a role's name (admin-only).
+- **DELETE /v1/roles/\{id\}**: Delete a role (admin-only).
+
+These endpoints ensure secure user and role handling, supporting XeoDocs' workflows for AI translations and project management. All are protected by JWT via the API Gateway.
+
+## Deployment
+
+- **Docker**: Built with `Dockerfile.auth`; exposes port 8081 in `docker-compose.dev.yml`.
+
+The Auth Service integrates seamlessly with XeoDocs' workflows, securing AI translations and repo management.
+
+Explore related microservices like [API Gateway](/microservices/gateway) or [Project Service](/microservices/project). For setup, refer to the [Installation Guide](/getting-started/installation).

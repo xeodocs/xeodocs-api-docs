@@ -1,0 +1,52 @@
+---
+title: Build Service
+description: Overview of the Build microservice in XeoDocs' architecture, responsible for generating static translated documentation sites with AI-powered content.
+template: doc
+---
+
+The Build Service is an essential microservice in XeoDocs. Developed in Golang, this service handles the compilation, static export, and deployment preparation of translated content, ensuring efficient delivery of multilingual docs.
+
+## Role in XeoDocs
+
+Within XeoDocs' microservices ecosystem, the Build Service focuses on transforming translated repositories into deployable static websites:
+
+- **Static Generation**: Converts dynamic previews into static files (HTML, CSS, JS, images) for cost-effective hosting.
+- **Banner Injection**: Adds non-intrusive promotional banners to drive traffic to related projects.
+- **Integration**: Works post-translation, triggered after AI processing in the Translation Service, to finalize content for publication.
+
+This service supports XeoDocs' goal of providing up-to-date, accessible translations by automating the build pipeline.
+
+## How It Works
+
+1. **Trigger Build**: Invoked via `/v1/projects/{id}/build` (optionally for a specific language), it changes to the language-specific repo directory.
+2. **Execute Commands**: Runs framework-specific commands (e.g., `npm run build && npm run start`) using `os/exec`.
+3. **Export or Scrape**: If an export command exists (e.g., `npm run export`), uses it; otherwise, starts a preview server and scrapes content with Colly.
+4. **Banner Injection**: Post-processes HTML files to insert subtle banners (e.g., footers promoting other projects).
+5. **Storage**: Uploads the static files to MinIO, generating accessible URLs via `/v1/projects/{id}/static/{lang}`.
+
+This workflow ensures static content is ready for deployment on platforms like Vercel or Netlify.
+
+## Key Features
+
+- **Framework Agnostic**: Supports common doc frameworks (e.g., Next.js, Docusaurus) via configurable build/export commands.
+- **Fallback Scraping**: Uses `gocolly/colly` for dynamic sites without native static export.
+- **Efficient Storage**: Integrates with MinIO for scalable, S3-compatible file hosting.
+- **Error Resilience**: Includes retries for command execution and logging to the Logging Service.
+
+## Build Service Endpoints
+
+Build Service handles the triggering of builds, static content generation, and retrieval of static file information. Below is a list of its endpoints with short descriptions:
+
+### Build Endpoints
+- **POST /v1/projects/\{id\}/build**: Trigger the build process and static generation for a project's translated content, optionally for a specific language.
+- **GET /v1/projects/\{id\}/static/\{lang\}**: Retrieve the URL or details for the generated static files of a specific language version of the project.
+
+These endpoints support XeoDocs' workflows for creating deployable static sites from AI-translated content, with all requests protected by JWT via the API Gateway.
+
+## Deployment
+
+- **Docker**: Uses `Dockerfile.build` with Node.js; exposes port 8084 in `docker-compose.dev.yml`.
+
+The Build Service completes the XeoDocs pipeline, turning AI-translated content into ready-to-deploy sites.
+
+For more, check [Translation Service](/microservices/translation) or [API Gateway](/microservices/gateway). Start with the [Installation Guide](/getting-started/installation).

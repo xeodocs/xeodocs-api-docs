@@ -1,0 +1,50 @@
+---
+title: Translation Service
+description: Overview of the Translation microservice in XeoDocs' architecture, powering AI-driven translations of open-source documentation from English into multiple languages.
+template: doc
+---
+
+The Translation Service is a critical microservice in XeoDocs. Built in Golang, this service utilizes AI models to translate tracked files accurately, maintaining technical integrity, code blocks, and formatting for seamless multilingual access.
+
+## Role in XeoDocs
+
+In XeoDocs' microservices architecture, the Translation Service focuses on the core AI translation process:
+
+- **AI Translation Execution**: Processes translatable content from project repositories, leveraging APIs like xAI or OpenAI for high-quality results.
+- **Status Monitoring**: Provides real-time updates on translation progress for each language.
+- **Integration**: Works in tandem with the Project Service (for file access) and Build Service (for post-translation static generation), ensuring end-to-end automation.
+
+This service enables XeoDocs to deliver up-to-date, AI-powered translations, bridging language gaps in the open-source community.
+
+## How It Works
+
+1. **Trigger Translation**: Initiated via `/v1/projects/{id}/translate` (for all or specific languages), it reads tracked files from language-specific repo copies.
+2. **Content Chunking**: Breaks large files into manageable chunks (e.g., under 4k tokens) to optimize AI API calls.
+3. **AI Prompting**: Sends prompts like "Translate this technical documentation from English to \{lang\}, preserving markdown and code blocks" to the AI API.
+4. **Parallel Processing**: Uses goroutines and sync.WaitGroup to translate files concurrently across languages.
+5. **Update and Save**: Writes translated content back, updates metadata (e.g., last_translated_at, hash), and logs progress.
+
+## Key Features
+
+- **AI Model Integration**: Supports xAI/OpenAI for contextual, accurate translations tailored to technical docs.
+- **Preservation of Structure**: Ensures code, markdown, and formatting remain intact during translation.
+- **Async Status Checks**: Endpoint `/v1/projects/{id}/status` for polling progress (e.g., "completed", "in progress").
+- **Error Handling**: Retries failed API calls and logs issues to the Logging Service.
+
+## Translation Service Endpoints
+
+Translation Service handles AI-driven translation triggers and status monitoring. Below is a list of its endpoints with short descriptions:
+
+### Translation Endpoints
+- **POST /v1/projects/\{id\}/translate**: Trigger AI translation for a project's tracked files, optionally for a specific language.
+- **GET /v1/projects/\{id\}/status**: Retrieve the status of ongoing or completed AI translations (and related builds) for a project, with details per language.
+
+These endpoints support XeoDocs' workflows for accurate, AI-based translations, with all requests protected by JWT via the API Gateway.
+
+## Deployment
+
+- **Docker**: Built with `Dockerfile.translation`; exposes port 8083 in `docker-compose.dev.yml`.
+
+The Translation Service powers the AI core of XeoDocs, enabling efficient conversions of English documentation into other languages.
+
+For related microservices, explore [Build Service](/microservices/build) or [Project Service](/microservices/project). Get started with the [Installation Guide](/getting-started/installation).

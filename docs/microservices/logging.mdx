@@ -1,0 +1,48 @@
+---
+title: Logging Service
+description: Overview of the Logging microservice in XeoDocs' architecture, responsible for storing and querying system logs in the AI-powered documentation translation system.
+template: doc
+---
+
+The Logging Service is a vital microservice in XeoDocs. Implemented in Golang, this service centralizes the collection, storage, and retrieval of logs, enabling effective monitoring, debugging, and auditing of workflows like repo cloning, AI translations, and static builds.
+
+## Role in XeoDocs
+
+In XeoDocs' microservices architecture, the Logging Service provides observability:
+
+- **Log Aggregation**: Collects logs from all services (e.g., event logs from translations, user actions, system cron runs).
+- **Querying and Filtering**: Allows admins to search logs via filters for troubleshooting issues in AI translation pipelines or build processes.
+- **Integration**: Other services (e.g., Translation, Build) publish logs here via HTTP calls or message queues, ensuring a unified view.
+
+This separation promotes better system health monitoring, crucial for maintaining up-to-date translations.
+
+## How It Works
+
+1. **Log Ingestion**: Services send log entries (e.g., via POST requests) with details like type (event, user, system, cron), message, userId, projectId, and level (info, warn, error).
+2. **Storage**: Persists logs in PostgreSQL using GORM, with timestamps for chronological querying.
+3. **Query Endpoint**: The `/v1/logs` GET endpoint supports filters (e.g., ?type=system&projectId=1) and pagination for efficient retrieval.
+4. **Auditing**: Logs are immutable, supporting compliance and error tracing in AI-driven processes.
+
+## Key Features
+
+- **Flexible Filtering**: Query by type, user, project, level, or date ranges.
+- **Pagination**: Returns results with total count, page, and limit for large datasets.
+- **Centralized Observability**: Integrates with tools like Prometheus or ELK for advanced analytics.
+- **Error Logging**: Captures failures in git operations, AI API calls, or builds.
+
+## Logging Service Endpoints
+
+Logging Service handles the storage and querying of system, user, event, and cron logs. Below is a list of its endpoints with short descriptions:
+
+### Logging Endpoints
+- **GET /v1/logs**: Query and retrieve logs with filters for type (e.g., system, cron), user ID, project ID, level (e.g., info, error), and pagination.
+
+This endpoint supports XeoDocs' workflows for monitoring AI translation processes and system activities, with all requests protected by JWT via the API Gateway.
+
+## Deployment
+
+- **Docker**: Built using `Dockerfile.logging`; exposes port 8085 in `docker-compose.dev.yml`.
+
+The Logging Service enhances XeoDocs' reliability by providing insights into AI translation and build activities.
+
+For related components, see [Build Service](/microservices/build) or [API Gateway](/microservices/gateway). Begin setup with the [Installation Guide](/getting-started/installation).

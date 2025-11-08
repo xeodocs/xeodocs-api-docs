@@ -1,0 +1,52 @@
+---
+title: Project Service
+description: Overview of the Project microservice in XeoDocs' architecture, handling repository management and setup for AI-powered translations of open-source documentation.
+template: doc
+---
+
+The Project Service is a foundational microservice in XeoDocs. Written in Golang, this service manages the creation, updating, and deletion of projects, including cloning Git repositories, detecting translatable content, and preparing language-specific copies for translation.
+
+## Role in XeoDocs
+
+In XeoDocs' microservices framework, the Project Service serves as the entry point for onboarding new documentation projects:
+
+- **Project Management**: Provides CRUD operations for projects, storing details like repo URLs, languages, and build commands.
+- **Repository Handling**: Clones or forks public Git repos, identifies files for translation (e.g., Markdown, HTML), and creates per-language copies.
+- **Integration**: Collaborates with the Translation and Build Services to enable AI translations and static generation, ensuring seamless workflows.
+
+This service lays the groundwork for keeping translations synchronized with original English content.
+
+## How It Works
+
+1. **Create Project**: Via `/v1/projects` POST, users add a project with details like doc URL, repo URL, languages (e.g., 'es', 'fr'), and commands.
+2. **Clone and Detect**: Uses go-git to clone the repo to a local directory (e.g., `/repos/{id}/original`), then scans for translatable files using filepath.Walk.
+3. **Language Copies**: Duplicates the repo for each language (e.g., `/repos/{id}/es`), logging paths to the tracked_files table in PostgreSQL.
+4. **Update and Delete**: Handles modifications (e.g., adding languages) and cleanup, ensuring data consistency across services.
+
+## Key Features
+
+- **Git Integration**: Leverages `go-git` for cloning, pulling, and change detection to keep content up-to-date.
+- **File Tracking**: Automatically detects and logs translatable files, with hashes for efficient update detection.
+- **Scalable Storage**: Uses MinIO or local filesystem for repo copies, supporting large documentation sets.
+- **CRUD Endpoints**: Fully RESTful with pagination and filtering for listing projects.
+
+## Project Service Endpoints
+
+Project Service manages the CRUD operations for projects, including repository setup and language configurations. Below is a list of its endpoints with short descriptions:
+
+### Project Management Endpoints
+- **POST /v1/projects**: Create a new project, specifying details like documentation URL, repository URL, languages, and build commands.
+- **GET /v1/projects**: List all projects (paginated), with optional filters for pagination.
+- **GET /v1/projects/\{id\}**: Retrieve details of a specific project by ID.
+- **PUT /v1/projects/\{id\}**: Update an existing project's details, such as adding languages or modifying commands.
+- **DELETE /v1/projects/\{id\}**: Delete a project and its associated repository copies.
+
+These endpoints support XeoDocs' workflows for onboarding open-source docs for AI translations, with all requests protected by JWT via the API Gateway.
+
+## Deployment
+
+- **Docker**: Built via `Dockerfile.project`; exposes port 8082 in `docker-compose.dev.yml`.
+
+The Project Service enables efficient management of open-source docs, paving the way for AI translations and static deployments in XeoDocs.
+
+For connected services, visit [Auth Service](/microservices/auth) or [Translation Service](/microservices/translation). Get started with the [Installation Guide](/getting-started/installation).

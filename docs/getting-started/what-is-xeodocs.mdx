@@ -1,0 +1,46 @@
+---
+title: What is XeoDocs?
+description: An introduction to XeoDocs, the AI-powered system for translating open-source technology documentation.
+template: doc
+---
+
+XeoDocs is an innovative platform designed to bridge language barriers in the open-source software community. At its core, XeoDocs leverages artificial intelligence to provide accurate, up-to-date translations of technology documentation, typically from English into multiple other languages. Hosted on xeodocs.com, it empowers developers worldwide to access high-quality docs in their preferred language, fostering global collaboration and innovation.
+
+## Motivation
+
+The open-source ecosystem thrives on accessible knowledge, but language limitations often hinder participation. XeoDocs addresses this by:
+
+- Delivering **real-time translations** that stay synchronized with the original English content.
+- Generating web traffic through subtle, non-intrusive banners that highlight related projects, helping creators promote their work.
+
+By automating translations, XeoDocs ensures that documentation remains current without manual effort, benefiting both contributors and users.
+
+## How It Works
+
+XeoDocs operates as a seamless system for managing and translating open-source repos:
+
+1. **Add a Project**: Submit the URL of a documentation website and its public Git repository (usually containing English content).
+2. **Repository Management**: The system clones the repo, detects translatable files (e.g., Markdown, HTML), and maintains separate copies for each target language.
+3. **AI-Powered Translation**: Using advanced AI models, content is translated while preserving technical accuracy, code blocks, and formatting.
+4. **Periodic Updates**: Automatically pulls changes from the source repo, propagates them to translated copies, and re-translates as needed.
+5. **Static Generation**: Builds and exports the translated content into static files (HTML, CSS, JS, etc.) for efficient hosting on platforms like Vercel or Cloudflare.
+6. **Deployment**: The final static sites are ready for publication, complete with optional banners to drive engagement.
+
+This process ensures cost-effective, scalable deployment while keeping translations fresh.
+
+## Key Features
+
+- **Multi-Language Support**: Translate into languages like Spanish, French, German, and more.
+- **Open-Source Friendly**: Works with any public Git repo, respecting licenses.
+- **Admin Panel**: A user-friendly Next.js interface for managing projects, monitoring translations, and viewing logs.
+- **Secure and Scalable**: Backend built in Golang with microservices, JWT authentication, and Docker deployment.
+
+## Benefits
+
+- **For Developers**: Access docs in your native language, speeding up learning and contribution.
+- **For Project Owners**: Expand your audience globally with minimal effort.
+- **For the Community**: Promotes inclusivity in tech, with AI ensuring high-fidelity translations.
+
+Ready to dive in? Check out the [Installation Guide](/getting-started/installation) to set up XeoDocs locally or explore our [API Reference](http://localhost:28082) for integration details.
+
+If you have questions or want to contribute, join us on [GitHub](https://github.com/xeodocs) or visit xeodocs.com for more.

@@ -1,0 +1,103 @@
+---
+title: Installation Guide
+description: Step-by-step instructions for setting up XeoDocs locally or in production, the AI-powered system for translating open-source technology documentation on xeodocs.com.
+template: doc
+---
+
+Welcome to the installation guide for XeoDocs, the innovative platform on xeodocs.com that uses AI to translate open-source technology documentation, typically from English into other languages. This guide covers setting up the backend microservices (built in Golang), database (PostgreSQL), storage (MinIO), and more using Docker for a seamless development or production environment.
+
+## Prerequisites
+
+Before installing XeoDocs, ensure you have the following:
+
+- **Docker and Docker Compose**: Version 20.10+ for containerization.
+- **Golang**: Version 1.21+ (for building from source, optional if using pre-built images).
+- **Git**: For cloning repositories.
+- **API Keys**: For AI translations (e.g., xAI or OpenAI API key) – set as environment variables.
+- **Hardware**: At least 4GB RAM and 2 CPU cores for local dev; more for production.
+
+Clone the backend repository:
+```bash
+git clone https://github.com/xeodocs/xeodocs-backend.git
+cd xeodocs-backend
+```
+
+## Environment Configuration
+
+Create a `.env` file in the root directory with the following variables (adjust as needed):
+
+```
+DB_HOST=db
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=your_secure_password
+DB_NAME=xeodocs
+
+MINIO_ROOT_USER=minioadmin
+MINIO_ROOT_PASSWORD=minioadmin
+
+AI_API_KEY=your_xai_or_openai_key  # For Translation Service
+
+AUTH_SERVICE_URL=http://auth-service:8081
+# Add URLs for other services...
+```
+
+## Local Development Setup
+
+Use `docker-compose.dev.yml` for a local environment with volume mounts for hot-reloading.
+
+1. **Build and Start Services**:
+   ```bash
+   docker compose -f docker-compose.dev.yml up --build -d
+   ```
+   This starts:
+   - API Gateway (port 8080)
+   - Auth Service (internal port 8081)
+   - Project Service (8082)
+   - Translation Service (8083)
+   - Build Service (8084)
+   - Logging Service (8085)
+   - Scheduler Service (internal)
+   - PostgreSQL (port 5432)
+   - MinIO (port 9000)
+
+2. **Database Migrations**:  
+   Automatically run by microservices on first startup using [Goose](https://github.com/pressly/goose).
+
+3. **Access the API**:
+   - Gateway: `http://localhost:8080/v1`
+   - MinIO Console: `http://localhost:9001` (login with MINIO_ROOT_USER/PASSWORD)
+   - Test login: POST to `/v1/auth/login` with default credentials (seed an admin user if needed).
+
+4. **Frontend Integration**:
+   For the Next.js admin panel, refer to the separate frontend repo setup. Point it to `http://localhost:8080/v1`.
+
+## Production Setup
+
+The Docker images are built in GitHub Actions and pushed to Docker Hub.
+
+**Option 1: Docker Compose**
+
+Use `docker-compose.prod.yml` for example in a remote VPS.
+
+```bash
+docker compose -f docker-compose.prod.yml up -d
+```
+
+**Option 2: Kubernetes**
+
+Use Helm charts or YAML manifests to deploy services as Deployments.
+
+## Running and Testing
+
+- **E2E Testing**: Run E2E tests after starting the stack.
+```bash
+go test ./tests/e2e -v
+```
+
+## Troubleshooting
+
+- **DB Connection Issues**: Verify `.env` credentials and container networks.
+- **AI API Errors**: Check the API key and network access.
+- **Git Clone Failures**: Ensure public repos and handle rate limits.
+- **Logs**: Use the Logging Service or container logs (`docker logs <container>`).

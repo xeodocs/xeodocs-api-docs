@@ -1,0 +1,43 @@
+---
+title: Scheduler Service
+description: Overview of the Scheduler microservice in XeoDocs' architecture, managing periodic tasks for keeping AI-translated documentation up-to-date.
+template: doc
+---
+
+The Scheduler Service is a key background component in XeoDocs. Developed in Golang, this service orchestrates periodic tasks such as Git repository updates, automatic re-translations, and builds, ensuring that translated content remains synchronized with the original sources without manual intervention.
+
+## Role in XeoDocs
+
+In XeoDocs' microservices architecture, the Scheduler Service handles automated maintenance:
+
+- **Periodic Operations**: Runs cron-like jobs to pull changes from source repositories, detect modifications, and trigger downstream processes like translations and static generations.
+- **System Efficiency**: Keeps the platform proactive by automating updates, reducing latency in delivering fresh translations.
+- **Integration**: Interacts with other services (e.g., Project for git pulls, Translation for re-translations, Build for regenerations) via internal API calls, logging activities to the Logging Service.
+
+This service operates silently in the background, enhancing the reliability of AI-powered translation workflows.
+
+## How It Works
+
+1. **Job Scheduling**: Uses the `gocron` library to define and run tasks at intervals (e.g., hourly git pulls for all projects).
+2. **Change Detection**: For each project, performs `git pull` on the original repo, checks for differences using file hashes, and propagates updates to language-specific copies.
+3. **Trigger Actions**: If changes are detected in translatable files, invokes the Translation Service; follows up with the Build Service if necessary.
+4. **Logging**: Records cron run outcomes (success, errors) to the Logging Service for monitoring.
+
+## Key Features
+
+- **Configurable Intervals**: Jobs can be scheduled via environment variables (e.g., every hour, day) for flexibility.
+- **Asynchronous Execution**: Uses goroutines for parallel processing of multiple projects.
+- **Error Handling**: Retries failed operations (e.g., git pulls) with exponential backoff.
+- **No Public API**: Internal-only, focused on automation rather than user-facing endpoints.
+
+## Scheduler Service Endpoints
+
+Scheduler Service handles background scheduling for tasks like periodic git pulls and auto-translations. It has no public endpoints, as it runs internal cron jobs without exposing any user-facing APIs.
+
+## Deployment
+
+- **Docker**: Built with `Dockerfile.scheduler`; runs without exposing ports (internal) in `docker-compose.dev.yml`.
+
+The Scheduler Service keeps XeoDocs dynamic, automating AI translations and updates for open-source docs.
+
+For related microservices, see [Project Service](/microservices/project) or [Logging Service](/microservices/logging). Begin with the [Installation Guide](/getting-started/installation).
