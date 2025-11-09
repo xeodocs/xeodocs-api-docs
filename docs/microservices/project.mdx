@@ -50,4 +50,8 @@ These endpoints support XeoDocs' workflows for onboarding open-source docs for A
 
 The Project Service enables efficient management of open-source docs, paving the way for AI translations and static deployments in XeoDocs.
 
+## Access Control
+
+Projects do not belong to specific users; access to CRUD operations on projects depends on the user's role. Role-based access control (RBAC) is enforced at the API Gateway level, ensuring that only authorized users (e.g., admins or editors) can create, update, or delete projects.
+
 For connected services, visit [Repository Service](/microservices/repository) or [Auth Service](/microservices/auth). Get started with the [Installation Guide](/getting-started/installation).

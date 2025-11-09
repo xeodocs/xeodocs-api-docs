@@ -648,8 +648,6 @@ components:
           type: string
         repoUrl:
           type: string
-        ownerId:
-          type: integer
         languages:
           type: array
           items:
