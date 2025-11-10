@@ -466,6 +466,137 @@ paths:
           description: Internal server error
       security:
         - bearerAuth: []
+  /v1/analytics/track:
+    post:
+      operationId: trackEvent
+      summary: Track analytics event from static site
+      tags:
+        - Analytics
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrackEventRequest'
+      responses:
+        '200':
+          description: Event tracked successfully
+        '400':
+          description: Invalid event data
+        '429':
+          description: Too many requests
+      security: []
+  /v1/analytics/{projectSlug}:
+    get:
+      operationId: getAnalytics
+      summary: Get traffic analytics for a project
+      tags:
+        - Analytics
+      parameters:
+        - name: projectSlug
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: lang
+          in: query
+          schema:
+            type: string
+          description: Language code filter
+        - name: dateRange
+          in: query
+          schema:
+            type: string
+            enum: [last_7_days, last_30_days, last_90_days]
+            default: last_7_days
+          description: Date range for analytics
+      responses:
+        '200':
+          description: Analytics data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsResponse'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Project not found
+      security:
+        - bearerAuth: []
+  /v1/analytics/{projectSlug}/pages:
+    get:
+      operationId: getPageAnalytics
+      summary: Get page-level analytics for a project
+      tags:
+        - Analytics
+      parameters:
+        - name: projectSlug
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: lang
+          in: query
+          schema:
+            type: string
+          description: Language code filter
+        - name: dateRange
+          in: query
+          schema:
+            type: string
+            enum: [last_7_days, last_30_days, last_90_days]
+            default: last_7_days
+          description: Date range for analytics
+      responses:
+        '200':
+          description: Page analytics data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageAnalyticsResponse'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Project not found
+      security:
+        - bearerAuth: []
+  /v1/analytics/{projectSlug}/referrers:
+    get:
+      operationId: getReferrerAnalytics
+      summary: Get referrer analytics for a project
+      tags:
+        - Analytics
+      parameters:
+        - name: projectSlug
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: lang
+          in: query
+          schema:
+            type: string
+          description: Language code filter
+        - name: dateRange
+          in: query
+          schema:
+            type: string
+            enum: [last_7_days, last_30_days, last_90_days]
+            default: last_7_days
+          description: Date range for analytics
+      responses:
+        '200':
+          description: Referrer analytics data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReferrerAnalyticsResponse'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Project not found
+      security:
+        - bearerAuth: []
 
 components:
   securitySchemes:
@@ -739,3 +870,83 @@ components:
         total: { type: integer }
         page: { type: integer }
         limit: { type: integer }
+    TrackEventRequest:
+      type: object
+      required: [projectSlug, lang, pagePath, timestamp]
+      properties:
+        projectSlug:
+          type: string
+          example: tailwindcss
+        lang:
+          type: string
+          example: es
+        pagePath:
+          type: string
+          example: /docs/installation
+        referrer:
+          type: string
+          example: https://google.com
+        timestamp:
+          type: string
+          format: date-time
+        eventType:
+          type: string
+          default: pageview
+          example: pageview
+        additionalData:
+          type: object
+          additionalProperties: true
+    AnalyticsResponse:
+      type: object
+      properties:
+        totalViews:
+          type: integer
+        uniqueUsers:
+          type: integer
+        sessions:
+          type: integer
+        avgSessionDuration:
+          type: number
+        topPages:
+          type: array
+          items:
+            type: object
+            properties:
+              pagePath:
+                type: string
+              views:
+                type: integer
+        dateRange:
+          type: string
+    PageAnalyticsResponse:
+      type: object
+      properties:
+        pages:
+          type: array
+          items:
+            type: object
+            properties:
+              pagePath:
+                type: string
+              views:
+                type: integer
+              uniqueUsers:
+                type: integer
+        dateRange:
+          type: string
+    ReferrerAnalyticsResponse:
+      type: object
+      properties:
+        referrers:
+          type: array
+          items:
+            type: object
+            properties:
+              referrer:
+                type: string
+              views:
+                type: integer
+              percentage:
+                type: number
+        dateRange:
+          type: string
