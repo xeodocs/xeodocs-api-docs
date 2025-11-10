@@ -19,12 +19,12 @@ By automating translations, XeoDocs ensures that documentation remains current w
 
 XeoDocs operates as a seamless system for managing and translating open-source repos:
 
-1. **Add a Project**: Submit the URL of a documentation website and its public Git repository (usually containing English content).
-2. **Repository Management**: The system clones the repo, detects translatable files (e.g., Markdown, HTML), and maintains separate copies for each target language.
-3. **AI-Powered Translation**: Using advanced AI models, content is translated while preserving technical accuracy, code blocks, and formatting.
-4. **Periodic Updates**: Automatically pulls changes from the source repo, propagates them to translated copies, and re-translates as needed.
-5. **Static Generation**: Builds and exports the translated content into static files (HTML, CSS, JS, etc.) for efficient hosting on platforms like Vercel or Cloudflare.
-6. **Deployment**: The final static sites are ready for publication, complete with optional banners to drive engagement.
+1. **Add a Project**: Submit project details including repository URLs, target languages, build commands, and auto-flags via API or the admin panel.
+2. **Repository Management**: The system forks the source repository, performs a shallow clone to local storage, creates branches for each target language within the cloned repository, and detects translatable files (e.g., Markdown, HTML).
+3. **AI-Powered Translation**: Using advanced AI models, content on language branches is translated while preserving technical accuracy, code blocks, and formatting.
+4. **Periodic Updates**: Automatically pulls changes from the source repo, detects modifications via hashes, re-translates affected content if enabled, and optionally builds and publishes updates.
+5. **Static Generation**: Builds and exports the translated branches into static files (HTML, CSS, JS, etc.) with injected banners for efficient hosting on platforms like Vercel or Cloudflare.
+6. **Deployment**: The final static sites are pushed to dedicated Git repositories per language, ready for publication to drive engagement.
 
 This process ensures cost-effective, scalable deployment while keeping translations fresh.
 

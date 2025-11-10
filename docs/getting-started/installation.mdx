@@ -13,6 +13,7 @@ Before installing XeoDocs, ensure you have the following:
 - **Docker and Docker Compose**: Version 20.10+ for containerization.
 - **Golang**: Version 1.21+ (for building from source, optional if using pre-built images).
 - **Git**: For cloning repositories.
+- **GitHub Account**: An organization or personal GitHub account for forking source repositories and publishing translated content. Configure access via a GitHub App for security.
 - **API Keys**: For AI translations (e.g., xAI or OpenAI API key) – set as environment variables.
 - **Hardware**: At least 4GB RAM and 2 CPU cores for local dev; more for production.
 
@@ -21,6 +22,43 @@ Clone the backend repository:
 git clone https://github.com/xeodocs/xeodocs-backend.git
 cd xeodocs-backend
 ```
+
+## GitHub Integration
+
+XeoDocs requires GitHub API access to fork source repositories, create language-specific branches, and publish translated static content to new repositories. For maximum security, use a GitHub App instead of a personal access token (PAT), as it provides fine-grained permissions and scoped access without sharing personal credentials.
+
+### Setting Up a GitHub App
+
+1. **Create a GitHub App**:
+   - Go to your GitHub account settings (or organization settings if using an org).
+   - Navigate to "Developer settings" > "GitHub Apps" > "New GitHub App".
+   - Fill in:
+     - **App name**: XeoDocs API
+     - **Homepage URL**: https://xeodocs.com (or your domain)
+     - **Webhook URL**: Leave blank (not needed for API-only access)
+     - **Permissions**:
+       - Repository permissions:
+         - Contents: Read and Write
+         - Metadata: Read
+         - Pull requests: Read and Write (for forking)
+       - Organization permissions (if applicable):
+         - Members: Read (to manage repos in org)
+     - **Where can this GitHub App be installed?**: Only on this account (or organization)
+   - Generate a private key and download it (e.g., `xeodocs-app.pem`).
+
+2. **Install the App**:
+   - On the app page, click "Install App" and select the account/organization where repos will be forked and created.
+
+3. **Configure Environment Variables**:
+   - Add the following to your `.env` file:
+     ```
+     GITHUB_APP_ID=your_github_app_id  # Numeric ID from app settings
+     GITHUB_PRIVATE_KEY=-----BEGIN RSA PRIVATE KEY-----\n...your_private_key...\n-----END RSA PRIVATE KEY-----  # Base64-encoded or multiline
+     GITHUB_INSTALLATION_ID=your_installation_id  # From installation URL or API
+     ```
+   - The private key should be the full PEM content, possibly base64-encoded for single-line storage.
+
+This setup ensures secure, token-less authentication using JWTs generated from the private key, scoped only to necessary permissions.
 
 ## Environment Configuration
 
@@ -39,6 +77,10 @@ RABBITMQ_HOST=rabbitmq
 RABBITMQ_PORT=5672
 
 AI_API_KEY=your_xai_or_openai_key  # For Translation Service
+
+GITHUB_APP_ID=your_github_app_id  # For GitHub API access
+GITHUB_PRIVATE_KEY=your_github_private_key  # Base64-encoded PEM
+GITHUB_INSTALLATION_ID=your_github_installation_id  # For app installation
 
 AUTH_SERVICE_URL=http://auth-service
 # Add URLs for other services...
@@ -103,5 +145,6 @@ go test ./tests/e2e -v
 
 - **DB Connection Issues**: Verify `.env` credentials and container networks.
 - **AI API Errors**: Check the API key and network access.
+- **GitHub API Errors**: Ensure the GitHub App is properly installed, permissions are set, and environment variables (GITHUB_APP_ID, GITHUB_PRIVATE_KEY, GITHUB_INSTALLATION_ID) are correct. Check app logs for JWT or token issues.
 - **Git Clone Failures**: Ensure public repos and handle rate limits.
 - **Logs**: Use the Logging Service or container logs (`docker logs <container>`).
