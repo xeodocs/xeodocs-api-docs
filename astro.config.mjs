@@ -30,6 +30,8 @@ export default defineConfig({
 						{ label: 'Logging', slug: 'microservices/logging' },
 						{ label: 'Scheduler', slug: 'microservices/scheduler' },
 						{ label: 'Worker', slug: 'microservices/worker' },
+						{ label: 'Analytics Processor', slug: 'microservices/analytics-processor' },
+						{ label: 'Analytics', slug: 'microservices/analytics' },
 					],
 				},
 			],

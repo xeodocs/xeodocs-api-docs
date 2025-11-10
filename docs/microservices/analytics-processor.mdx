@@ -1,0 +1,46 @@
+---
+title: Analytics Processor Service
+description: Overview of the Analytics Processor microservice in XeoDocs' architecture, handling event processing and aggregation for traffic analytics.
+template: doc
+---
+
+The Analytics Processor Service is a dedicated component of XeoDocs. Built in Golang, this microservice consumes raw traffic events from Kafka, processes and aggregates them, and stores the results in InfluxDB for efficient time-series analytics.
+
+## Role in XeoDocs
+
+In XeoDocs' microservices setup, the Analytics Processor Service acts as the data pipeline for traffic insights:
+
+- **Event Consumption**: Reads raw events from Kafka topics like "raw_traffic_events" to handle high-volume traffic data asynchronously.
+- **Data Processing**: Performs deduplication, session aggregation, and counting of page views, referrers, and other metrics.
+- **Storage**: Writes aggregated data to InfluxDB for optimized querying and visualization.
+
+This separation ensures scalable analytics without impacting core translation workflows.
+
+## How It Works
+
+1. **Kafka Consumption**: The service runs as a Kafka consumer, subscribing to topics for incoming events from tracking snippets.
+2. **Event Processing**: Parses events, handles duplicates, and aggregates metrics (e.g., unique users, sessions) in memory or batches.
+3. **InfluxDB Storage**: Writes processed data points to InfluxDB with timestamps for historical analysis.
+4. **Error Handling**: Logs failures and retries, ensuring data integrity for traffic reporting.
+
+All processing is internal, with no public endpoints.
+
+## Key Features
+
+- **Kafka Integration**: Uses `confluent-kafka-go` or `sarama` for reliable event streaming and consumer groups.
+- **Aggregation Logic**: Implements session tracking, view counting, and deduplication to reduce noise in analytics.
+- **InfluxDB Client**: Connects to InfluxDB for writing time-series data efficiently.
+- **Concurrency**: Goroutines for parallel processing of events to handle spikes in traffic.
+- **Logging**: Integrates with the Logging Service for monitoring processing status.
+
+## Analytics Processor Service Endpoints
+
+This service has no public endpoints; it operates internally via Kafka consumption and InfluxDB writes.
+
+## Deployment
+
+- **Docker**: Built with `Dockerfile.analytics-processor`; runs in `docker-compose.dev.yml`.
+
+The Analytics Processor Service enables valuable traffic insights for XeoDocs, supporting data-driven decisions on translated content.
+
+Explore related microservices like [Analytics Service](/microservices/analytics) or [Build Service](/microservices/build). For setup, refer to the [Installation Guide](/getting-started/installation).

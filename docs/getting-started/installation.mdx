@@ -76,6 +76,13 @@ RABBITMQ_DEFAULT_PASS=guest
 RABBITMQ_HOST=rabbitmq
 RABBITMQ_PORT=5672
 
+KAFKA_BROKERS=kafka:9092
+
+INFLUXDB_URL=http://influxdb:8086
+INFLUXDB_TOKEN=your_influx_token
+INFLUXDB_ORG=xeodocs
+INFLUXDB_BUCKET=traffic_analytics
+
 AI_API_KEY=your_xai_or_openai_key  # For Translation Service
 
 GITHUB_APP_ID=your_github_app_id  # For GitHub API access
@@ -83,7 +90,15 @@ GITHUB_PRIVATE_KEY=your_github_private_key  # Base64-encoded PEM
 GITHUB_INSTALLATION_ID=your_github_installation_id  # For app installation
 
 AUTH_SERVICE_URL=http://auth-service
-# Add URLs for other services...
+PROJECT_SERVICE_URL=http://project-service
+REPOSITORY_SERVICE_URL=http://repository-service
+TRANSLATION_SERVICE_URL=http://translation-service
+BUILD_SERVICE_URL=http://build-service
+LOGGING_SERVICE_URL=http://logging-service
+SCHEDULER_SERVICE_URL=http://scheduler-service
+WORKER_SERVICE_URL=http://worker-service
+ANALYTICS_PROCESSOR_SERVICE_URL=http://analytics-processor-service
+ANALYTICS_SERVICE_URL=http://analytics-service
 ```
 
 ## Local Development Setup
@@ -104,8 +119,12 @@ Use `docker-compose.dev.yml` for a local environment with volume mounts for hot-
    - Logging Service (internal)
    - Scheduler Service (internal)
    - Worker Service (internal)
+   - Analytics Processor Service (internal)
+   - Analytics Service (internal)
    - PostgreSQL (internal)
    - RabbitMQ (internal)
+   - Kafka (internal)
+   - InfluxDB (internal)
 
 2. **Database Migrations**:  
    Automatically run by microservices on first startup using [Goose](https://github.com/pressly/goose).
@@ -147,4 +166,6 @@ go test ./tests/e2e -v
 - **AI API Errors**: Check the API key and network access.
 - **GitHub API Errors**: Ensure the GitHub App is properly installed, permissions are set, and environment variables (GITHUB_APP_ID, GITHUB_PRIVATE_KEY, GITHUB_INSTALLATION_ID) are correct. Check app logs for JWT or token issues.
 - **Git Clone Failures**: Ensure public repos and handle rate limits.
+- **Kafka Connection Issues**: Verify KAFKA_BROKERS and ensure the Kafka container is running and accessible.
+- **InfluxDB Errors**: Check INFLUXDB_URL, INFLUXDB_TOKEN, INFLUXDB_ORG, and INFLUXDB_BUCKET for correctness and ensure the InfluxDB container is initialized.
 - **Logs**: Use the Logging Service or container logs (`docker logs <container>`).

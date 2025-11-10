@@ -1,0 +1,53 @@
+---
+title: Analytics Service
+description: Overview of the Analytics Service microservice in XeoDocs' architecture, providing APIs for querying traffic analytics data.
+template: doc
+---
+
+The Analytics Service is a query-focused component of XeoDocs. Built in Golang, this microservice queries aggregated traffic data from InfluxDB and exposes REST APIs for retrieving statistics, enabling frontend visualization of site performance.
+
+## Role in XeoDocs
+
+In XeoDocs' microservices setup, the Analytics Service acts as the data retrieval layer for insights:
+
+- **Data Querying**: Fetches aggregated metrics from InfluxDB for views, sessions, and referrers.
+- **API Exposure**: Provides endpoints for the frontend to request stats, supporting dashboards and reports.
+- **Performance Optimization**: Separates querying from processing to ensure fast responses for analytics data.
+
+This enables users to monitor the impact of translated documentation on traffic.
+
+## How It Works
+
+1. **Request Handling**: Receives API requests from the frontend via the API Gateway.
+2. **InfluxDB Queries**: Constructs and executes queries on InfluxDB for time-series data, filtering by project, language, and date ranges.
+3. **Data Formatting**: Aggregates and formats results into JSON responses for charts (e.g., using Chart.js).
+4. **Caching**: Optionally caches frequent queries to improve performance.
+
+All endpoints are prefixed with `/v1/analytics` and documented in the OpenAPI spec.
+
+## Key Features
+
+- **InfluxDB Client**: Uses the InfluxDB Go client for querying time-series data efficiently.
+- **Flexible Queries**: Supports filters like date ranges, project slugs, and languages for targeted analytics.
+- **JSON Responses**: Returns structured data for easy integration with frontend libraries.
+- **Rate Limiting**: Integrates with gateway middleware to prevent abuse.
+- **Logging**: Records query metrics via the Logging Service.
+
+## Analytics Service Endpoints
+
+Below is a list of its endpoints with short descriptions:
+
+### Analytics Endpoints
+- **GET /v1/analytics/{projectSlug}**: Retrieve traffic stats for a project (e.g., views, unique users) with optional query params like `lang`, `dateRange`.
+- **GET /v1/analytics/{projectSlug}/pages**: Get page-level metrics (e.g., top pages by views).
+- **GET /v1/analytics/{projectSlug}/referrers**: List referrer sources and counts.
+
+These endpoints provide comprehensive traffic insights, supporting XeoDocs' analytics workflows.
+
+## Deployment
+
+- **Docker**: Built with `Dockerfile.analytics`; runs in `docker-compose.dev.yml`.
+
+The Analytics Service delivers actionable data for optimizing translated content in XeoDocs.
+
+Explore related microservices like [Analytics Processor Service](/microservices/analytics-processor) or [Build Service](/microservices/build). For setup, refer to the [Installation Guide](/getting-started/installation).
