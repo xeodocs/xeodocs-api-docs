@@ -12,7 +12,7 @@ Within XeoDocs' microservices ecosystem, the Build Service focuses on transformi
 
 - **Static Generation**: Converts dynamic previews into static files (HTML, CSS, JS, images) for cost-effective hosting.
 - **Banner Injection**: Adds non-intrusive promotional banners to drive traffic to related projects.
-- **Integration**: Works post-translation, triggered by Worker Service to finalize content and upload to target repositories.
+- **Integration**: Works post-translation, triggered by Worker Service to finalize content and prepare for deployment.
 
 This service supports XeoDocs' goal of providing up-to-date, accessible translations by automating the build and deployment pipeline.
 
@@ -22,15 +22,15 @@ This service supports XeoDocs' goal of providing up-to-date, accessible translat
 2. **Execute Commands**: Runs framework-specific commands (e.g., `npm run build`) using `os/exec`.
 3. **Export or Scrape**: If export command exists, uses it; otherwise, starts preview server and scrapes with Colly.
 4. **Banner Injection**: Post-processes HTML to insert banners.
-5. **Deployment**: Pushes static files to target Git repository for hosting.
+5. **Prepare for Publishing**: Generates static files ready for deployment; actual git push to repositories is handled by the Repository Service.
 
-This ensures translated content is built and deployed automatically.
+This ensures translated content is built and prepared for deployment automatically.
 
 ## Key Features
 
 - **Framework Agnostic**: Supports common doc frameworks (e.g., Next.js, Docusaurus) via configurable build/export commands.
 - **Fallback Scraping**: Uses `gocolly/colly` for dynamic sites without native static export.
-- **Git Deployment**: Pushes built static files to target repositories for hosting.
+- **Static File Generation**: Produces deployable HTML, CSS, JS files with banner injection; git push to repositories is handled by the Repository Service.
 - **Mounted Volumes**: Operates on shared mounted volumes for file access.
 - **Error Resilience**: Includes retries for command execution and logging to the Logging Service.
 

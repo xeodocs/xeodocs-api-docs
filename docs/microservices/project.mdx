@@ -11,15 +11,15 @@ The Project Service is a foundational microservice in XeoDocs. Written in Golang
 In XeoDocs' microservices framework, the Project Service serves as the entry point for onboarding new documentation projects:
 
 - **Project Management**: Provides CRUD operations for projects, storing details like repo URLs, languages, and build commands.
-- **Task Enqueuing**: Upon project creation, enqueues "clone_repo" tasks to RabbitMQ, returns 202 Accepted immediately.
+- **Task Enqueuing**: Upon project creation, enqueues "setup_repo" tasks to RabbitMQ, returns 202 Accepted immediately.
 - **Integration**: Collaborates with Worker Service for asynchronous repository setup and file detection.
 
 This service lays the groundwork for keeping translations synchronized with original English content.
 
 ## How It Works
 
-1. **Create Project**: Via public `/v1/projects` POST, stores project details, enqueues "clone_repo" task to RabbitMQ, returns 202 Accepted.
-2. **Async Setup**: Worker Service processes task, calls Repository Service for cloning and file detection, creates language copies.
+1. **Create Project**: Via public `/v1/projects` POST, stores project details, enqueues "setup_repo" task to RabbitMQ, returns 202 Accepted.
+2. **Async Setup**: Worker Service processes task, calls Repository Service internally to fork the source repository, perform shallow clone, create language branches, and detect translatable files.
 3. **Update and Delete**: Handles modifications and cleanup synchronously.
 
 This ensures immediate response while processing occurs in the background.

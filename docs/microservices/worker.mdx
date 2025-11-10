@@ -10,8 +10,8 @@ The Worker Service is a critical microservice in XeoDocs. Developed in Golang, t
 
 Within XeoDocs' microservices ecosystem, the Worker Service focuses on background task execution:
 
-- **Asynchronous Task Processing**: Consumes tasks from RabbitMQ queues (e.g., "clone_repo", "translate_files", "build_task") enqueued by producer services like Project and Translation.
-- **Workflow Chaining**: Processes tasks and may enqueue follow-up tasks or make internal calls to other services, enabling complex workflows (e.g., clone → translate → build).
+- **Asynchronous Task Processing**: Consumes tasks from RabbitMQ queues (e.g., "setup_repo", "check_for_updates", "build_project", "publish_project") enqueued by producer services like Project, Scheduler, and Build.
+- **Workflow Chaining**: Processes tasks and coordinates subsequent steps by calling internal endpoints on other services, enabling complex workflows (e.g., setup → translate → build → publish).
 - **Concurrency and Scalability**: Uses goroutines for parallel processing; scales horizontally in Kubernetes for AI-intensive or resource-heavy loads.
 - **Integration**: Works alongside Repository, Translation, and Build Services to handle file operations and computations without blocking API responses.
 
