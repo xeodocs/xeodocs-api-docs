@@ -34,6 +34,12 @@ export default defineConfig({
 						{ label: 'Analytics', slug: 'microservices/analytics' },
 					],
 				},
+				{
+					label: 'Static Websites',
+					items: [
+						{ label: 'JS Snippet', slug: 'static-websites/js-snippet' },
+					],
+				},
 			],
 			locales: {
 				root: {

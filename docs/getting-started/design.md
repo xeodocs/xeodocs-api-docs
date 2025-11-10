@@ -130,7 +130,7 @@ This document provides an informative overview of the XeoDocs backend architectu
   - Logs events, status update.
   - User retrieves publish details.
 - **Analytics Workflow**:
-  - Visitor accesses translated site (e.g., tailwindcss.xeodocs.com/es/) with injected tracking snippet.
+  - Visitor accesses translated site (e.g., tailwindcss-es.xeodocs.com/) with injected tracking snippet.
   - Snippet sends event data (page view, referrer, etc.) via POST to API Gateway endpoint `/v1/analytics/track`.
   - Gateway produces raw event to Kafka topic "raw_traffic_events".
   - Analytics Processor Service consumes from Kafka, processes/aggregates (e.g., deduplication, session counts), stores in InfluxDB.
@@ -156,7 +156,7 @@ This structure ensures XeoDocs delivers up-to-date, translated static content ef
 
 ## 6. Mini Web Traffic Analysis System
 
-To integrate a minimalist Google Analytics-like system into XeoDocs—the AI-powered platform on xeodocs.com for translating open-source technology documentation, typically from English into other languages—you'll leverage Kafka for event streaming and practice. This will track traffic on translated static sites (e.g., page views, sessions, referrers on subdomains like tailwindcss.xeodocs.com). The setup focuses on ingestion, processing, storage, and querying, ensuring scalability for AI-driven translation workflows.
+To integrate a minimalist Google Analytics-like system into XeoDocs—the AI-powered platform on xeodocs.com for translating open-source technology documentation, typically from English into other languages—you'll leverage Kafka for event streaming and practice. This will track traffic on translated static sites (e.g., page views, sessions, referrers on subdomains like tailwindcss-es.xeodocs.com). The setup focuses on ingestion, processing, storage, and querying, ensuring scalability for AI-driven translation workflows.
 
 #### What to Add
 - **Tracking Snippet**: A lightweight JavaScript code (e.g., similar to GA's gtag.js) injected into static sites during the Build Service (e.g., in banners or footers). It captures events like page loads and sends them via POST to an ingestion endpoint (e.g., with data: {projectSlug, lang, pagePath, referrer, timestamp}).
@@ -169,7 +169,7 @@ To integrate a minimalist Google Analytics-like system into XeoDocs—the AI-pow
 Add Kafka to `docker-compose.dev.yml` (e.g., `image: confluentinc/cp-kafka:7.0.1`). Update the monorepo with new services and shared Kafka clients in `internal/shared/kafka/`.
 
 #### Complete Workflow
-1. **Event Capture**: Visitor accesses translated site (e.g., tailwindcss.xeodocs.com/es/) → JS snippet fires event (e.g., page view).
+1. **Event Capture**: Visitor accesses translated site (e.g., tailwindcss-es.xeodocs.com/) → JS snippet fires event (e.g., page view).
 2. **Ingestion**: Snippet POSTs data to API Gateway endpoint → Gateway produces raw event to Kafka topic "raw_traffic_events".
 3. **Processing**: Analytics Processor Service (consumer) reads from Kafka, aggregates (e.g., into sessions, counts), and stores in InfluxDB.
 4. **Querying**: Frontend requests stats via API Gateway → Routes to Analytics Service, which queries DB and returns aggregated data (e.g., JSON for charts).

@@ -1,0 +1,116 @@
+---
+title: JS Tracking Snippet for Static Websites
+description: Tutorial on configuring the embedded JavaScript snippet for traffic analytics in XeoDocs static websites.
+template: doc
+---
+
+XeoDocs provides a lightweight JavaScript snippet to track visitor interactions on translated static websites. This snippet captures page views, referrers, and other events, sending them to the analytics API for processing and aggregation. This tutorial guides you through configuring and embedding the snippet in your static sites.
+
+## Overview
+
+The tracking snippet is a small JavaScript code that:
+
+- Fires on page load to record views.
+- Collects metadata like project slug, language, page path, referrer, and timestamp.
+- Sends data via POST to the XeoDocs API Gateway endpoint `/v1/analytics/track`.
+- Is injected during the build process but can also be added manually for custom setups.
+
+No external dependencies are required; it uses native JavaScript.
+
+## Prerequisites
+
+- Access to the static website's HTML files (e.g., in the built output).
+- Knowledge of your project slug and target languages.
+- The API Gateway URL (e.g., `https://api.xeodocs.com`).
+
+## Configuration Steps
+
+### Step 1: Obtain the Snippet
+
+The snippet is automatically injected by the Build Service into banners or footers. For manual addition, use the following code:
+
+```html
+<script>
+(function() {
+  var xeoAnalytics = {
+    apiUrl: 'https://api.xeodocs.com/v1/analytics/track',  // Replace with your API Gateway URL
+    projectSlug: 'tailwindcss',  // Your project slug
+    lang: 'es',  // Target language code
+    sendEvent: function(eventType, data) {
+      var payload = {
+        projectSlug: this.projectSlug,
+        lang: this.lang,
+        pagePath: window.location.pathname,
+        referrer: document.referrer,
+        timestamp: new Date().toISOString(),
+        eventType: eventType,
+        ...data
+      };
+      fetch(this.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(function(err) { console.log('Analytics error:', err); });
+    }
+  };
+  // Track page view on load
+  window.addEventListener('load', function() {
+    xeoAnalytics.sendEvent('pageview');
+  });
+})();
+</script>
+```
+
+### Step 2: Customize the Configuration
+
+Edit the variables in the script:
+
+- **`apiUrl`**: The full URL to the analytics track endpoint. Use the production API Gateway URL.
+- **`projectSlug`**: The slug of your project (e.g., 'tailwindcss'). Must match the project in XeoDocs.
+- **`lang`**: The language code for the page (e.g., 'es' for Spanish). Update for each language version.
+
+For dynamic language detection, you can set `lang` based on URL or a global variable.
+
+### Step 3: Embed in HTML
+
+Add the script to the `<head>` or before `</body>` in your HTML files:
+
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <title>My Translated Page</title>
+  <script>
+    // Paste the configured snippet here
+  </script>
+</head>
+<body>
+  <!-- Your content -->
+</body>
+</html>
+```
+
+For multi-language sites, include the snippet on every page, adjusting `lang` per page or using JavaScript to detect it.
+
+### Step 4: Test the Snippet
+
+1. Deploy the updated site.
+2. Visit a page and check the browser console for errors.
+3. Verify events are sent by monitoring the API logs or checking InfluxDB data.
+4. Use tools like browser dev tools to inspect the POST request.
+
+### Step 5: Advanced Configuration
+
+- **Event Types**: Extend with custom events, e.g., `xeoAnalytics.sendEvent('click', { element: 'button' });`.
+- **Privacy**: Ensure compliance with GDPR; add opt-out logic if needed.
+- **Error Handling**: The snippet includes basic error logging; enhance for production.
+- **Rate Limiting**: The API Gateway may apply limits; handle 429 responses.
+
+## Troubleshooting
+
+- **Snippet Not Loading**: Check for JavaScript errors in the console.
+- **Events Not Sent**: Verify `apiUrl` is correct and accessible. Ensure CORS is configured.
+- **Data Not Appearing**: Confirm `projectSlug` and `lang` match your project setup.
+- **Performance Impact**: The snippet is lightweight; monitor page load times.
+
+This setup enables seamless traffic tracking for XeoDocs static sites. For more on analytics, see [Analytics Service](/microservices/analytics).
