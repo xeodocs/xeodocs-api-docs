@@ -15,6 +15,7 @@ export default defineConfig({
 						{ label: 'What is XeoDocs?', slug: 'getting-started/what-is-xeodocs' },
 						{ label: 'Installation Guide', slug: 'getting-started/installation' },
 						{ label: 'General Design', slug: 'getting-started/design' },
+						{ label: 'Event Flows', slug: 'getting-started/event-flows' },
 					],
 				},
 				{

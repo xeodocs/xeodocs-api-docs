@@ -1,0 +1,132 @@
+---
+title: Event Flows
+description: Overview of event flows in XeoDocs, including project creation, translation, and build processes.
+template: doc
+---
+
+## Adding a New Project
+
+1. **User Authentication**: The user (e.g., via the frontend admin panel, curl or Postman) logs in to obtain a JWT token.  
+   **Responsible Microservice**: Auth Service (handles POST `/v1/auth/login`).
+
+2. **Project Creation Request**: The authenticated user sends a POST request to create the project, including details like name, slug, sourceDocURL, sourceRepoURL, sourceLanguage, targetLanguages, buildCommand, exportCommand, previewCommand, publishDomain, autoTranslate, autoConvert, autoDeploy. The API Gateway validates the JWT and routes the request.  
+   **Responsible Microservice**: API Gateway (routes to Project Service via POST `/v1/projects`).
+
+3. **Project Saving and Task Enqueuing**: The service saves the project details to the database and enqueues an asynchronous task (e.g., "setup_repo") to RabbitMQ for background processing, returning a 202 Accepted response immediately.  
+   **Responsible Microservice**: Project Service.
+
+4. **Task Consumption**: The queued task is consumed from RabbitMQ, coordinating the subsequent steps.  
+   **Responsible Microservice**: Worker Service (listens continuously to queues).
+
+5. **Repository Forking, Cloning, and Branch Creation**: The Worker calls this service internally to fork the source repository within the XeoDocs GitHub or GitLab account (using the respective APIs), perform a shallow clone (depth=1) of the forked repository to a local volume, and create branches for each target language (e.g., 'es' for Spanish) within that cloned repository. The forked and cloned repository name format is `project-[slug]`. File detection for translatable content (e.g., .md, .html) occurs here, with paths logged to the database.
+   **Responsible Microservice**: Repository Service (via internal endpoint like POST `/internal/setup-repo`).
+
+6. **Logging of Setup Events**: Throughout the forking, cloning, and branching, events (e.g., successes or errors) are recorded for auditing.  
+   **Responsible Microservice**: Logging Service (receives logs from Repository and Worker Services).
+
+7. **Trigger AI Translation (Optional/Auto)**: If configured for immediate translation, the Worker enqueues or calls to start AI processing on the translatable files within the language-specific branches of the cloned repository.  
+   **Responsible Microservice**: Translation Service (triggered internally, e.g., via `/internal/translate-task`).
+
+8. **Status Update and Monitoring**: The project status is updated in the database, allowing polling via public endpoints.  
+   **Responsible Microservice**: Project Service (or Worker Service for DB writes).
+
+9. **Subsequent Build (If Triggered)**: Once translated, the Worker can chain to generate static content from the language branches in the cloned repository.  
+   **Responsible Microservice**: Build Service (via internal call like POST `/internal/build-task` for compilation, preview, and scraping).
+
+10. **Publishing**: If auto_convert and auto_publish are TRUE, the Worker chains to generate and publish static content from the updated branches. A new repository per translated language is created in the XeoDocs GitHub account and the static content is pushed to it, repository names format is `project-[slug]-[language]`.
+    **Responsible Microservices**: Build Service (via internal call like POST `/internal/build-task` for compilation, preview and scraping). Repository Service for publishing (via internal call like POST `/internal/publish-task`).
+
+11. **Periodic Maintenance Setup**: The new project is now included in scheduled cron jobs for future git pulls (from the forked repository) and auto-re-translations on branches.  
+    **Responsible Microservice**: Scheduler Service (adds to its time-based jobs).
+
+This asynchronous flow in XeoDocs ensures quick responses during project addition while handling time-intensive AI translations and Git operations in the background, all coordinated via microservices. For more details, refer to the [Project Service](/microservices/project) or [Worker Service](/microservices/worker) documentation.
+
+## Detecting New Content to Translate After a Scheduler-Triggered Pull
+
+Detection of new content for translation occurs as part of periodic maintenance triggered by the Scheduler Service. This workflow identifies changes in the forked repository, updates branches, and initiates AI translations if enabled. Below is the step-by-step flow, specifying the responsible microservice at each stage:
+
+1. **Cron Job Execution**: A scheduled cron job (e.g., hourly) runs to check all active projects for updates.  
+   **Responsible Microservice**: Scheduler Service (uses gocron to initiate the process).
+
+2. **Project Fetch and Task Enqueuing**: The Scheduler queries the database for projects with auto_translate set to TRUE and enqueues tasks (e.g., "check_for_updates") to RabbitMQ for each qualifying project.  
+   **Responsible Microservice**: Scheduler Service.
+
+3. **Task Consumption**: The queued task is consumed from RabbitMQ, coordinating the update checks.  
+   **Responsible Microservice**: Worker Service (listens continuously to queues).
+
+4. **Git Pull and Change Detection**: The Worker calls this service internally to perform a git pull on the forked repository (within the XeoDocs GitHub or GitLab account), update the shallow clone (depth=1) on the local volume, and detect changes in translatable files (e.g., via hash comparisons) across language-specific branches.  
+   **Responsible Microservice**: Repository Service (via internal endpoint like POST `/internal/pull-and-detect`).
+
+5. **Logging of Update Events**: Events from the pull and detection (e.g., changed files or errors) are recorded for auditing.  
+   **Responsible Microservice**: Logging Service (receives logs from Repository and Worker Services).
+
+6. **Trigger AI Translation (If Changes Detected)**: If new or modified translatable content is found and auto_translate is TRUE, the Worker enqueues or calls to start AI processing on the affected files within the language-specific branches.  
+   **Responsible Microservice**: Translation Service (triggered internally, e.g., via `/internal/translate-task`).
+
+7. **Status Update**: The project status is updated in the database.  
+   **Responsible Microservice**: Project Service (or Worker Service for DB writes).
+
+8. **Subsequent Build and Publish (If Enabled)**: If auto_convert and auto_publish are TRUE, the Worker chains to generate and publish static content from the updated branches.  
+   **Responsible Microservice**: Build Service (via internal call like POST `/internal/build-task` for compilation, preview and scraping). Repository Service for publishing (via internal call like POST `/internal/publish-task`).
+
+This periodic flow in XeoDocs ensures ongoing AI translations remain up-to-date with source changes, all coordinated via microservices. For more details, refer to the [Scheduler Service](/microservices/scheduler) or [Repository Service](/microservices/repository) documentation.
+
+## Manually Triggering Project Conversion to Static Content
+
+Manually requesting to convert a project to static content (via build + preview + scraping) allows users to regenerate deployable files on demand, such as after updates or translations. This workflow is initiated via API (e.g., from the frontend admin panel) and leverages asynchronicity for efficiency. Below is the step-by-step flow, specifying the responsible microservice at each stage (assuming the user is already authenticated with a valid JWT from the Auth Service):
+
+1. **Manual Build Request**: The user sends a POST request to trigger the conversion, specifying the project ID and optionally a language. The API Gateway validates the JWT and RBAC permissions before routing.  
+   **Responsible Microservice**: API Gateway (routes to Build Service via POST `/v1/projects/{id}/build` with optional ?lang=es).
+
+2. **Task Enqueuing**: The service receives the request, validates project details (e.g., auto_convert flag), enqueues an asynchronous task (e.g., "build_project") to RabbitMQ, and returns a 202 Accepted response immediately with a status message.  
+   **Responsible Microservice**: Build Service.
+
+3. **Task Consumption**: The queued task is consumed from RabbitMQ, coordinating the build process.  
+   **Responsible Microservice**: Worker Service (listens continuously to queues).
+
+4. **Access Repository Branches**: The Worker calls this service internally to ensure access to the latest language-specific branches in the forked and cloned repository on the shared local volume.  
+   **Responsible Microservice**: Repository Service (via internal endpoint like GET `/internal/repo-branches`).
+
+5. **Build, Preview, and Scraping**: The Worker calls this service to execute the build command (e.g., npm run build), start a preview server if needed, and perform export instead of scraping if available to generate static files (HTML, CSS, JS) with injected banners.  
+   **Responsible Microservice**: Build Service (via internal endpoint like POST `/internal/build-task`).
+
+6. **Logging of Build Events**: Throughout the process, events (e.g., build successes, scraping errors) are recorded for auditing.  
+   **Responsible Microservice**: Logging Service (receives logs from Build and Worker Services).
+
+7. **Status Update and Notification**: The project status is updated in the database, allowing the user to poll for completion.  
+   **Responsible Microservice**: Project Service (or Worker Service for DB writes).
+
+8. **Retrieve Static Content Info**: The user can now query the generated static files' details or URLs for deployment.  
+   **Responsible Microservice**: Build Service (via GET `/v1/projects/{id}/static/{lang}` routed through the API Gateway).
+
+This manual flow in XeoDocs ensures users can trigger AI-enhanced static content regeneration without waiting, with processing handled asynchronously. For automated variants, see the scheduler-driven flow. For more details, refer to the [Build Service](/microservices/build) or [Worker Service](/microservices/worker) documentation.
+
+## Manually Triggering Project Publishing
+
+Manually requesting to publish a project pushes the generated static content (after build + preview + scraping) to a dedicated Git repository for that language and project, enabling deployment (e.g., on static hosting). This workflow is initiated via API (e.g., from the frontend admin panel) and uses asynchronicity for efficiency. Below is the step-by-step flow, specifying the responsible microservice at each stage (assuming the user is already authenticated with a valid JWT from the Auth Service and that static content has been generated):
+
+1. **Manual Publish Request**: The user sends a POST request to trigger publishing, specifying the project ID and language. The API Gateway validates the JWT and RBAC permissions before routing.  
+   **Responsible Microservice**: API Gateway (routes to Build Service via a new or extended endpoint like POST `/v1/projects/{id}/publish` with required ?lang=es).
+
+2. **Task Enqueuing**: The service receives the request, checks flags (e.g., auto_publish, though overridden for manual), enqueues an asynchronous task (e.g., "publish_project") to RabbitMQ, and returns a 202 Accepted response immediately with a status message.  
+   **Responsible Microservice**: Build Service.
+
+3. **Task Consumption**: The queued task is consumed from RabbitMQ, coordinating the publish process.  
+   **Responsible Microservice**: Worker Service (listens continuously to queues).
+
+4. **Access Static Content Files**: The Worker calls this service internally to ensure access to the generated static files (from previous build) on the shared local volume, within the language-specific branch.  
+   **Responsible Microservice**: Repository Service (via internal endpoint like GET `/internal/static-files`).
+
+5. **Git Push to Static Repository**: The Worker calls this service to commit the static files to the dedicated static content Git repository for the language and project, then perform a git push (using go-git) to the remote (e.g., GitHub).  
+   **Responsible Microservice**: Repository Service (via internal endpoint like POST `/internal/publish-task`, handling the commit and push logic).
+
+6. **Logging of Publish Events**: Throughout the process, events (e.g., push successes, commit details, or errors) are recorded for auditing.  
+   **Responsible Microservice**: Logging Service (receives logs from Build and Worker Services).
+
+7. **Status Update and Notification**: The project status is updated in the database, allowing the user to poll for completion.  
+   **Responsible Microservice**: Project Service (or Worker Service for DB writes).
+
+8. **Retrieve Publish Details**: The user can now query the published repository details or URLs for verification or deployment.  
+   **Responsible Microservice**: Build Service (via an existing or extended GET `/v1/projects/{id}/static/{lang}` routed through the API Gateway, including publish repo info).
+
+This manual flow in XeoDocs allows users to control publishing of AI-translated static content to Git repositories, ensuring seamless deployment while handling operations asynchronously. For automated publishing, see scheduler-driven flows. For more details, refer to the [Build Service](/microservices/build) or [Repository Service](/microservices/repository) documentation.
